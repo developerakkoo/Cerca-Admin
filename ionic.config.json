@@ -1,0 +1,7 @@
+{
+  "name": "cerca_admin",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
