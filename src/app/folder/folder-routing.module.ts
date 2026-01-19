@@ -13,6 +13,10 @@ const routes: Routes = [
     loadChildren: () => import('./pages/users/users.module').then( m => m.UsersPageModule)
   },
   {
+    path: 'analytics',
+    loadChildren: () => import('./pages/analytics/analytics.module').then( m => m.AnalyticsPageModule)
+  },
+  {
     path: 'drivers',
     loadChildren: () => import('./pages/drivers/drivers.module').then( m => m.DriversPageModule)
   },

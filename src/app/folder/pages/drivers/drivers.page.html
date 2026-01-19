@@ -1,13 +1,61 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="true" class="ion-no-border">
   <ion-toolbar>
-    <ion-title>drivers</ion-title>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Drivers</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
+  <ion-header collapse="condense" class="ion-no-border">
     <ion-toolbar>
-      <ion-title size="large">drivers</ion-title>
+      <ion-title size="large">Drivers</ion-title>
     </ion-toolbar>
   </ion-header>
+
+  <ion-searchbar
+    placeholder="Search by name, email, phone"
+    [(ngModel)]="searchTerm"
+    (ionChange)="onSearchChange()">
+  </ion-searchbar>
+
+  <ion-segment [(ngModel)]="statusFilter" (ionChange)="loadDrivers()">
+    <ion-segment-button value="all">
+      <ion-label>All</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="active">
+      <ion-label>Active</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="pending">
+      <ion-label>Pending</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+
+  <ion-list lines="full">
+    <ion-item *ngFor="let driver of drivers">
+      <ion-label>
+        <h2>{{ driver.name }}</h2>
+        <p>{{ driver.email }} • {{ driver.phone }}</p>
+        <p>Status: {{ driver.isActive ? 'Active' : 'Pending/Blocked' }} • Verified: {{ driver.isVerified ? 'Yes' : 'No' }}</p>
+      </ion-label>
+      <ion-buttons slot="end">
+        <ion-button fill="outline" size="small" (click)="approveDriver(driver)">
+          Approve
+        </ion-button>
+        <ion-button fill="outline" size="small" color="medium" (click)="rejectDriver(driver)">
+          Reject
+        </ion-button>
+        <ion-button fill="outline" size="small" (click)="toggleVerify(driver)">
+          {{ driver.isVerified ? 'Unverify' : 'Verify' }}
+        </ion-button>
+        <ion-button fill="outline" size="small" color="warning" (click)="toggleBlock(driver)">
+          {{ driver.isActive ? 'Block' : 'Unblock' }}
+        </ion-button>
+        <ion-button fill="outline" size="small" color="secondary" (click)="viewDocuments(driver)">
+          Docs
+        </ion-button>
+      </ion-buttons>
+    </ion-item>
+  </ion-list>
 </ion-content>

@@ -1,13 +1,55 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="true" class="ion-no-border">
   <ion-toolbar>
-    <ion-title>users</ion-title>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Users</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
+  <ion-header collapse="condense" class="ion-no-border">
     <ion-toolbar>
-      <ion-title size="large">users</ion-title>
+      <ion-title size="large">Users</ion-title>
     </ion-toolbar>
   </ion-header>
+
+  <ion-searchbar
+    placeholder="Search by name, email, phone"
+    [(ngModel)]="searchTerm"
+    (ionChange)="onSearchChange()">
+  </ion-searchbar>
+
+  <ion-segment [(ngModel)]="statusFilter" (ionChange)="loadUsers()">
+    <ion-segment-button value="all">
+      <ion-label>All</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="active">
+      <ion-label>Active</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="blocked">
+      <ion-label>Blocked</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+
+  <ion-list lines="full">
+    <ion-item *ngFor="let user of users">
+      <ion-label>
+        <h2>{{ user.fullName }}</h2>
+        <p>{{ user.email }} • {{ user.phoneNumber || 'No phone' }}</p>
+        <p>Status: {{ user.isActive ? 'Active' : 'Blocked' }} • Verified: {{ user.isVerified ? 'Yes' : 'No' }}</p>
+      </ion-label>
+      <ion-buttons slot="end">
+        <ion-button fill="outline" size="small" (click)="toggleVerify(user)">
+          {{ user.isVerified ? 'Unverify' : 'Verify' }}
+        </ion-button>
+        <ion-button fill="outline" size="small" color="warning" (click)="toggleBlock(user)">
+          {{ user.isActive ? 'Block' : 'Unblock' }}
+        </ion-button>
+        <ion-button fill="outline" size="small" color="secondary" (click)="adjustWallet(user)">
+          Wallet
+        </ion-button>
+      </ion-buttons>
+    </ion-item>
+  </ion-list>
 </ion-content>

@@ -1,13 +1,68 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="true" class="ion-no-border">
   <ion-toolbar>
-    <ion-title>settings</ion-title>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Settings</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
+  <ion-header collapse="condense" class="ion-no-border">
     <ion-toolbar>
-      <ion-title size="large">settings</ion-title>
+      <ion-title size="large">Settings</ion-title>
     </ion-toolbar>
   </ion-header>
+
+  <ion-card *ngIf="settings">
+    <ion-card-header>
+      <ion-card-title>System Settings</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label>Maintenance Mode</ion-label>
+        <ion-toggle [(ngModel)]="settings.systemSettings.maintenanceMode"></ion-toggle>
+      </ion-item>
+      <ion-item>
+        <ion-label>Force Update</ion-label>
+        <ion-toggle [(ngModel)]="settings.systemSettings.forceUpdate"></ion-toggle>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="settings">
+    <ion-card-header>
+      <ion-card-title>Pricing</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="stacked">Base Fare</ion-label>
+        <ion-input type="number" [(ngModel)]="settings.pricingConfigurations.baseFare"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="stacked">Per Km Rate</ion-label>
+        <ion-input type="number" [(ngModel)]="settings.pricingConfigurations.perKmRate"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="stacked">Minimum Fare</ion-label>
+        <ion-input type="number" [(ngModel)]="settings.pricingConfigurations.minimumFare"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="stacked">Cancellation Fees</ion-label>
+        <ion-input type="number" [(ngModel)]="settings.pricingConfigurations.cancellationFees"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="stacked">Platform Fees (%)</ion-label>
+        <ion-input type="number" [(ngModel)]="settings.pricingConfigurations.platformFees"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="stacked">Driver Commissions (%)</ion-label>
+        <ion-input type="number" [(ngModel)]="settings.pricingConfigurations.driverCommissions"></ion-input>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-button expand="block" (click)="saveSettings()" [disabled]="!settings">
+    Save Settings
+  </ion-button>
 </ion-content>

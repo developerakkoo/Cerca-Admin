@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { AdminApiService } from '../services/admin-api.service';
 
 @Component({
   selector: 'app-folder',
@@ -11,29 +12,19 @@ export class FolderPage implements OnInit {
   public folder!: string;
   private activatedRoute = inject(ActivatedRoute);
   
-  // Dashboard statistics
-  dashboardStats = {
-    totalUsers: 1248,
-    activeDrivers: 342,
-    totalRides: 15678,
-    revenue: 125430,
-    pendingRequests: 23,
-    completedRides: 15234
-  };
+  dashboardStats: any = null;
+  isLoading = false;
 
   // Recent activities
-  recentActivities = [
-    { type: 'user', message: 'New user registered', time: '2 mins ago', icon: 'person-add-outline' },
-    { type: 'ride', message: 'Ride completed', time: '5 mins ago', icon: 'checkmark-circle-outline' },
-    { type: 'driver', message: 'New driver approved', time: '10 mins ago', icon: 'car-outline' },
-    { type: 'payment', message: 'Payment received', time: '15 mins ago', icon: 'cash-outline' },
-    { type: 'user', message: 'User profile updated', time: '20 mins ago', icon: 'person-outline' }
-  ];
+  recentActivities: any[] = [];
 
-  constructor() {}
+  constructor(private adminApi: AdminApiService) {}
 
   ngOnInit() {
     this.folder = this.activatedRoute.snapshot.paramMap.get('id') as string;
+    if (this.isDashboard) {
+      this.loadDashboard();
+    }
   }
 
   get isDashboard(): boolean {
@@ -46,5 +37,35 @@ export class FolderPage implements OnInit {
       currency: 'USD',
       minimumFractionDigits: 0
     }).format(amount);
+  }
+
+  private loadDashboard() {
+    this.isLoading = true;
+    this.adminApi.getDashboard().subscribe({
+      next: (data) => {
+        this.dashboardStats = {
+          totalUsers: data?.stats?.totalUsers || 0,
+          activeDrivers: data?.stats?.activeDrivers || 0,
+          totalRides: data?.stats?.totalRides || 0,
+          revenue: data?.revenue?.totalPlatformEarnings || 0,
+          pendingRequests: data?.stats?.pendingDrivers || 0,
+          completedRides: data?.stats?.completedRides || 0
+        };
+        this.recentActivities = data?.recentActivities || [];
+        this.isLoading = false;
+      },
+      error: () => {
+        this.dashboardStats = {
+          totalUsers: 0,
+          activeDrivers: 0,
+          totalRides: 0,
+          revenue: 0,
+          pendingRequests: 0,
+          completedRides: 0
+        };
+        this.recentActivities = [];
+        this.isLoading = false;
+      }
+    });
   }
 }

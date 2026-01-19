@@ -12,6 +12,7 @@ import { filter, Subscription } from 'rxjs';
 export class AppComponent implements OnInit, OnDestroy {
   public appPages = [
     { title: 'Dashboard', url: '/folder/dashboard', icon: 'grid' },
+    { title: 'Analytics', url: '/folder/analytics', icon: 'analytics' },
     { title: 'Users', url: '/folder/users', icon: 'people' },
     { title: 'Drivers', url: '/folder/drivers', icon: 'car' },
     { title: 'Settings', url: '/folder/settings', icon: 'settings' },

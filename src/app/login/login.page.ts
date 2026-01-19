@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MenuController, AlertController } from '@ionic/angular';
+import { AdminAuthService } from '../services/admin-auth.service';
 
 @Component({
   selector: 'app-login',
@@ -13,16 +14,18 @@ export class LoginPage implements OnInit {
   loginForm: FormGroup;
   isSubmitted = false;
   showPassword = false;
+  isLoading = false;
 
   constructor(
     private formBuilder: FormBuilder,
     private router: Router,
     private menuController: MenuController,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private adminAuth: AdminAuthService
   ) {
     this.loginForm = this.formBuilder.group({
-      email: ['admin@test.com', [Validators.required, Validators.email]],
-      password: ['test123', [Validators.required, Validators.minLength(6)]]
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
@@ -44,22 +47,24 @@ export class LoginPage implements OnInit {
 
     if (this.loginForm.valid) {
       const { email, password } = this.loginForm.value;
-      
-      // Test credentials: admin@test.com / test123
-      if (email === 'admin@test.com' && password === 'test123') {
-        // Enable menu for authenticated users
-        await this.menuController.enable(true);
-        // Navigate to dashboard
-        this.router.navigate(['/folder/dashboard']);
-      } else {
-        // Show error message
-        const alert = await this.alertController.create({
-          header: 'Login Failed',
-          message: 'Invalid email or password. Please try again.',
-          buttons: ['OK']
-        });
-        await alert.present();
-      }
+
+      this.isLoading = true;
+      this.adminAuth.login(email, password).subscribe({
+        next: async () => {
+          await this.menuController.enable(true);
+          this.router.navigate(['/folder/dashboard']);
+          this.isLoading = false;
+        },
+        error: async () => {
+          this.isLoading = false;
+          const alert = await this.alertController.create({
+            header: 'Login Failed',
+            message: 'Invalid email or password. Please try again.',
+            buttons: ['OK']
+          });
+          await alert.present();
+        }
+      });
     }
   }
 }

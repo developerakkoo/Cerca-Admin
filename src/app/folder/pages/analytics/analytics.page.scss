@@ -1,0 +1,23 @@
+.analytics-content {
+  --background: #f8f9fb;
+}
+
+.analytics-container {
+  padding: 16px;
+}
+
+.summary-card {
+  margin-bottom: 16px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.summary-item h3 {
+  margin: 6px 0 0;
+  font-weight: 600;
+}
+
