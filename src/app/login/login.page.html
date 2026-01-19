@@ -1,0 +1,70 @@
+<ion-content [fullscreen]="true" class="login-content">
+  <div class="login-container">
+    <div class="logo-container">
+      <img src="assets/logo.svg" alt="Cerca Logo" class="logo" />
+    </div>
+
+    <div class="form-container">
+      <h1 class="welcome-text">Welcome Back</h1>
+      <p class="subtitle-text">Sign in to continue to your admin panel</p>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+        <!-- Email Field -->
+        <ion-item class="form-item" [class.item-has-error]="isSubmitted && errorControl['email'].errors">
+          <ion-label position="stacked">Email</ion-label>
+          <ion-input
+            type="email"
+            formControlName="email"
+            placeholder="Enter your email"
+            [class.invalid]="isSubmitted && errorControl['email'].errors">
+          </ion-input>
+        </ion-item>
+        <div class="error-message" *ngIf="isSubmitted && errorControl['email'].errors?.['required']">
+          Email is required
+        </div>
+        <div class="error-message" *ngIf="isSubmitted && errorControl['email'].errors?.['email']">
+          Please enter a valid email address
+        </div>
+
+        <!-- Password Field -->
+        <ion-item class="form-item" [class.item-has-error]="isSubmitted && errorControl['password'].errors">
+          <ion-label position="stacked">Password</ion-label>
+          <ion-input
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="Enter your password"
+            [class.invalid]="isSubmitted && errorControl['password'].errors">
+          </ion-input>
+          <ion-button
+            fill="clear"
+            slot="end"
+            (click)="togglePasswordVisibility()"
+            class="password-toggle">
+            <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+          </ion-button>
+        </ion-item>
+        <div class="error-message" *ngIf="isSubmitted && errorControl['password'].errors?.['required']">
+          Password is required
+        </div>
+        <div class="error-message" *ngIf="isSubmitted && errorControl['password'].errors?.['minlength']">
+          Password must be at least 6 characters
+        </div>
+
+        <!-- Submit Button -->
+        <ion-button
+          expand="block"
+          type="submit"
+          class="login-button"
+          [disabled]="!loginForm.valid && isSubmitted">
+          Sign In
+        </ion-button>
+      </form>
+
+      <div class="test-credentials">
+        <p class="test-info">Test Credentials:</p>
+        <p class="test-cred">Email: admin@test.com</p>
+        <p class="test-cred">Password: test123</p>
+      </div>
+    </div>
+  </div>
+</ion-content>

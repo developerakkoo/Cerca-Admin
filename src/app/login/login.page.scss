@@ -1,0 +1,230 @@
+.login-content {
+  --background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto;
+}
+
+.logo-container {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo {
+  width: 120px;
+  height: auto;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.form-container {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.welcome-text {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--ion-color-primary);
+  margin: 0 0 0.5rem 0;
+  text-align: center;
+}
+
+.subtitle-text {
+  font-size: 0.95rem;
+  color: var(--ion-color-medium);
+  margin: 0 0 2rem 0;
+  text-align: center;
+}
+
+.login-form {
+  width: 100%;
+}
+
+.form-item {
+  --background: var(--ion-color-light);
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --inner-padding-end: 0;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+
+  &:focus-within {
+    --background: #ffffff;
+    border-color: var(--ion-color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--ion-color-primary-rgb), 0.1);
+  }
+
+  &.item-has-error {
+    border-color: var(--ion-color-danger);
+    --background: rgba(var(--ion-color-danger-rgb), 0.05);
+  }
+
+  ion-label {
+    font-weight: 600;
+    color: var(--ion-color-primary);
+    margin-bottom: 8px;
+  }
+
+  ion-input {
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+    font-size: 1rem;
+    color: var(--ion-color-dark);
+
+    &.invalid {
+      color: var(--ion-color-danger);
+    }
+  }
+}
+
+.password-toggle {
+  --color: var(--ion-color-medium);
+  margin: 0;
+  --padding-start: 8px;
+  --padding-end: 8px;
+
+  &:hover {
+    --color: var(--ion-color-primary);
+  }
+}
+
+.error-message {
+  color: var(--ion-color-danger);
+  font-size: 0.875rem;
+  margin: -0.75rem 0 0.5rem 1rem;
+  display: block;
+}
+
+.login-button {
+  --background: var(--ion-color-primary);
+  --background-activated: var(--ion-color-primary-shade);
+  --color: var(--ion-color-primary-contrast);
+  --border-radius: 12px;
+  --box-shadow: 0 4px 15px rgba(var(--ion-color-primary-rgb), 0.4);
+  margin-top: 1.5rem;
+  height: 50px;
+  font-weight: 600;
+  font-size: 1rem;
+  text-transform: none;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    --box-shadow: 0 6px 20px rgba(var(--ion-color-primary-rgb), 0.5);
+    transform: translateY(-2px);
+  }
+
+  &:disabled {
+    --background: var(--ion-color-medium);
+    --box-shadow: none;
+    opacity: 0.6;
+  }
+}
+
+.test-credentials {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: var(--ion-color-light);
+  border-radius: 12px;
+  text-align: center;
+  border: 1px dashed var(--ion-color-medium);
+}
+
+.test-info {
+  font-size: 0.875rem;
+  color: var(--ion-color-medium);
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.test-cred {
+  font-size: 0.8rem;
+  color: var(--ion-color-medium);
+  margin: 0.25rem 0;
+  font-family: 'Courier New', monospace;
+}
+
+// Responsive design
+@media (max-width: 480px) {
+  .login-content {
+    padding: 1rem;
+  }
+
+  .login-container {
+    padding: 0;
+  }
+
+  .form-container {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+
+  .welcome-text {
+    font-size: 1.75rem;
+  }
+
+  .logo {
+    width: 100px;
+  }
+}
+
+// Laptop and larger screens - ensure proper centering
+@media (min-width: 768px) {
+  .login-content {
+    padding: 3rem;
+  }
+
+  .login-container {
+    max-width: 450px;
+  }
+
+  .form-container {
+    padding: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .login-content {
+    padding: 4rem;
+  }
+
+  .login-container {
+    max-width: 480px;
+  }
+}
+
+// Animation
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-container {
+  animation: fadeIn 0.5s ease-out;
+}

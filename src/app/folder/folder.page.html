@@ -1,20 +1,165 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="true" class="ion-no-border">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>{{ folder }}</ion-title>
+    <ion-title>{{ isDashboard ? 'Dashboard' : folder }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
+<ion-content [fullscreen]="true" class="dashboard-content">
+  <ion-header collapse="condense" class="ion-no-border">
     <ion-toolbar>
-      <ion-title size="large">{{ folder }}</ion-title>
+      <ion-title size="large">{{ isDashboard ? 'Dashboard' : folder }}</ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <div id="container">
+  <!-- Dashboard View -->
+  <div *ngIf="isDashboard" class="dashboard-container">
+    <!-- Welcome Section -->
+    <div class="welcome-section">
+      <h1 class="welcome-title">Welcome Back, Admin!</h1>
+      <p class="welcome-subtitle">Here's what's happening with your platform today</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+      <ion-card class="stat-card">
+        <ion-card-content>
+          <div class="stat-icon users">
+            <ion-icon name="people-outline"></ion-icon>
+          </div>
+          <div class="stat-info">
+            <h3 class="stat-value">{{ dashboardStats.totalUsers | number }}</h3>
+            <p class="stat-label">Total Users</p>
+            <span class="stat-change positive">
+              <ion-icon name="arrow-up-outline"></ion-icon>
+              +12% from last month
+            </span>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="stat-card">
+        <ion-card-content>
+          <div class="stat-icon drivers">
+            <ion-icon name="car-outline"></ion-icon>
+          </div>
+          <div class="stat-info">
+            <h3 class="stat-value">{{ dashboardStats.activeDrivers | number }}</h3>
+            <p class="stat-label">Active Drivers</p>
+            <span class="stat-change positive">
+              <ion-icon name="arrow-up-outline"></ion-icon>
+              +8% from last month
+            </span>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="stat-card">
+        <ion-card-content>
+          <div class="stat-icon rides">
+            <ion-icon name="location-outline"></ion-icon>
+          </div>
+          <div class="stat-info">
+            <h3 class="stat-value">{{ dashboardStats.totalRides | number }}</h3>
+            <p class="stat-label">Total Rides</p>
+            <span class="stat-change positive">
+              <ion-icon name="arrow-up-outline"></ion-icon>
+              +15% from last month
+            </span>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="stat-card">
+        <ion-card-content>
+          <div class="stat-icon revenue">
+            <ion-icon name="cash-outline"></ion-icon>
+          </div>
+          <div class="stat-info">
+            <h3 class="stat-value">{{ formatCurrency(dashboardStats.revenue) }}</h3>
+            <p class="stat-label">Total Revenue</p>
+            <span class="stat-change positive">
+              <ion-icon name="arrow-up-outline"></ion-icon>
+              +22% from last month
+            </span>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Quick Stats Row -->
+    <div class="quick-stats-row">
+      <ion-card class="quick-stat-card">
+        <ion-card-content>
+          <div class="quick-stat-content">
+            <ion-icon name="time-outline" class="quick-stat-icon"></ion-icon>
+            <div>
+              <h4>{{ dashboardStats.pendingRequests }}</h4>
+              <p>Pending Requests</p>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="quick-stat-card">
+        <ion-card-content>
+          <div class="quick-stat-content">
+            <ion-icon name="checkmark-done-outline" class="quick-stat-icon"></ion-icon>
+            <div>
+              <h4>{{ dashboardStats.completedRides | number }}</h4>
+              <p>Completed Rides</p>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Recent Activities -->
+    <ion-card class="activities-card">
+      <ion-card-header>
+        <ion-card-title>Recent Activities</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="none" class="activities-list">
+          <ion-item *ngFor="let activity of recentActivities" class="activity-item">
+            <ion-icon [name]="activity.icon" slot="start" class="activity-icon"></ion-icon>
+            <ion-label>
+              <h3>{{ activity.message }}</h3>
+              <p>{{ activity.time }}</p>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Quick Actions -->
+    <ion-card class="actions-card">
+      <ion-card-header>
+        <ion-card-title>Quick Actions</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="actions-grid">
+          <ion-button fill="outline" routerLink="/folder/users" class="action-button">
+            <ion-icon name="people-outline" slot="start"></ion-icon>
+            Manage Users
+          </ion-button>
+          <ion-button fill="outline" routerLink="/folder/drivers" class="action-button">
+            <ion-icon name="car-outline" slot="start"></ion-icon>
+            Manage Drivers
+          </ion-button>
+          <ion-button fill="outline" routerLink="/folder/settings" class="action-button">
+            <ion-icon name="settings-outline" slot="start"></ion-icon>
+            Settings
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Default Folder View (for other folder pages) -->
+  <div *ngIf="!isDashboard" id="container">
     <strong class="capitalize">{{ folder }}</strong>
     <p>Explore <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
   </div>
