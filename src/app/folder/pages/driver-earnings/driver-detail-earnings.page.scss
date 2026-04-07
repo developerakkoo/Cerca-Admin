@@ -1,0 +1,52 @@
+.detail-container {
+  padding: 16px;
+}
+
+.filter-card,
+.summary-card,
+.table-card,
+.bulk-card {
+  margin-bottom: 16px;
+}
+
+.filter-row,
+.bulk-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.earnings-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.earnings-table th,
+.earnings-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.loading-container,
+.empty-state {
+  text-align: center;
+  padding: 24px;
+}
+
+.empty-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+

@@ -1,0 +1,371 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/folder/vendors"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Vendor</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense" class="ion-no-border">
+    <ion-toolbar>
+      <ion-title size="large">Vendor</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ng-container *ngIf="!isLoading && !error && vendor">
+    <section class="vendor-hero">
+      <div class="vendor-hero-inner">
+        <ion-grid class="ion-no-padding">
+          <ion-row class="ion-align-items-center ion-justify-content-between">
+            <ion-col size="12" sizeMd="7" sizeLg="8">
+              <p class="vendor-hero-eyebrow">Business</p>
+              <h1 class="vendor-hero-title">{{ vendor.businessName }}</h1>
+              <div class="vendor-hero-badges">
+                <ion-badge [color]="verificationBadgeColor(vendor)">
+                  {{ verificationLabel(vendor) }}
+                </ion-badge>
+                <ion-badge [color]="vendor.isActive ? 'success' : 'medium'">
+                  {{ vendor.isActive ? 'Active' : 'Blocked' }}
+                </ion-badge>
+              </div>
+            </ion-col>
+            <ion-col size="12" sizeMd="5" sizeLg="4">
+              <div class="driver-stat-tile">
+                <div class="driver-stat-icon-wrap" aria-hidden="true">
+                  <ion-icon name="people-outline"></ion-icon>
+                </div>
+                <div class="driver-stat-text">
+                  <span class="driver-stat-value">{{ driverCount }}</span>
+                  <span class="driver-stat-label">Driver{{ driverCount === 1 ? '' : 's' }} under this vendor</span>
+                </div>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
+    </section>
+
+    <div class="vendor-detail-shell">
+      <ion-grid class="vendor-content-grid">
+        <ion-row>
+          <ion-col size="12" sizeLg="6">
+            <ion-card class="vendor-panel-card">
+              <ion-card-header>
+                <ion-card-title>Contact &amp; profile</ion-card-title>
+                <ion-card-subtitle>Registered business details</ion-card-subtitle>
+              </ion-card-header>
+              <ion-card-content>
+                <dl class="info-dl">
+                  <div class="info-row">
+                    <dt>Owner</dt>
+                    <dd>{{ vendor.ownerName || '—' }}</dd>
+                  </div>
+                  <div class="info-row">
+                    <dt>Email</dt>
+                    <dd>{{ vendor.email || '—' }}</dd>
+                  </div>
+                  <div class="info-row">
+                    <dt>Phone</dt>
+                    <dd>{{ vendor.phone || '—' }}</dd>
+                  </div>
+                  <div class="info-row">
+                    <dt>Address</dt>
+                    <dd>{{ vendor.address || '—' }}</dd>
+                  </div>
+                  <div class="info-row" *ngIf="vendor.rejectionReason">
+                    <dt>Rejection reason</dt>
+                    <dd class="text-danger">{{ vendor.rejectionReason }}</dd>
+                  </div>
+                  <div class="info-row" *ngIf="vendor.allowDocumentResubmit && !vendor.isVerified">
+                    <dt>Re-upload</dt>
+                    <dd>Enabled on vendor login for document fixes.</dd>
+                  </div>
+                </dl>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+
+          <ion-col size="12" sizeLg="6">
+            <ion-card class="vendor-panel-card">
+              <ion-card-header>
+                <ion-card-title>Bank (payouts)</ion-card-title>
+                <ion-card-subtitle>Withdrawals &amp; settlements</ion-card-subtitle>
+              </ion-card-header>
+              <ion-card-content>
+                <ng-container *ngIf="hasBankAccount; else noBank">
+                  <dl class="info-dl">
+                    <div class="info-row">
+                      <dt>Account holder</dt>
+                      <dd>{{ vendor.bankAccount.accountHolderName }}</dd>
+                    </div>
+                    <div class="info-row">
+                      <dt>Bank</dt>
+                      <dd>{{ vendor.bankAccount.bankName }}</dd>
+                    </div>
+                    <div class="info-row">
+                      <dt>IFSC</dt>
+                      <dd>{{ vendor.bankAccount.ifscCode }}</dd>
+                    </div>
+                    <div class="info-row">
+                      <dt>Account</dt>
+                      <dd>{{ maskAccountNumber(vendor.bankAccount.accountNumber) }}</dd>
+                    </div>
+                    <div class="info-row">
+                      <dt>Type</dt>
+                      <dd>{{ vendor.bankAccount.accountType || '—' }}</dd>
+                    </div>
+                  </dl>
+                  <ion-button size="small" fill="outline" expand="block" class="ion-margin-top" (click)="openVendorPayouts()">
+                    <ion-icon name="wallet-outline" slot="start"></ion-icon>
+                    View vendor payouts
+                  </ion-button>
+                </ng-container>
+                <ng-template #noBank>
+                  <p class="muted">No bank account on file.</p>
+                  <ion-button size="small" fill="outline" expand="block" (click)="openVendorPayouts()">
+                    Open payouts
+                  </ion-button>
+                </ng-template>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+        </ion-row>
+
+        <ion-row>
+          <ion-col size="12">
+            <ion-card class="vendor-panel-card drivers-section-card">
+              <ion-card-header>
+                <div class="drivers-section-header">
+                  <div>
+                    <ion-card-title>Drivers</ion-card-title>
+                    <ion-card-subtitle>Team linked to this vendor account</ion-card-subtitle>
+                  </div>
+                  <ion-chip color="primary" outline="true" class="driver-count-chip">
+                    <ion-icon name="car-outline"></ion-icon>
+                    <ion-label>{{ driverCount }} total</ion-label>
+                  </ion-chip>
+                </div>
+              </ion-card-header>
+              <ion-card-content>
+                <div *ngIf="drivers.length === 0" class="drivers-empty">
+                  <ion-icon name="people-outline" class="drivers-empty-icon"></ion-icon>
+                  <p class="drivers-empty-title">No drivers yet</p>
+                  <p class="drivers-empty-hint">Drivers who join under this vendor will appear here.</p>
+                </div>
+
+                <ion-grid *ngIf="drivers.length > 0" class="driver-cards-grid ion-no-padding">
+                  <ion-row>
+                    <ion-col
+                      size="12"
+                      sizeSm="6"
+                      sizeXl="4"
+                      *ngFor="let d of drivers">
+                      <article class="driver-tile">
+                        <div class="driver-tile-top">
+                          <div class="driver-avatar" [attr.aria-label]="d.name">
+                            {{ getDriverInitials(d.name) }}
+                          </div>
+                          <div class="driver-tile-head">
+                            <h3 class="driver-tile-name">{{ d.name }}</h3>
+                            <p class="driver-tile-meta">{{ d.email || '—' }}</p>
+                            <p class="driver-tile-meta">{{ d.phone || '—' }}</p>
+                          </div>
+                        </div>
+                        <div class="driver-tile-chips">
+                          <ion-chip size="small" [color]="d.isVerified ? 'success' : 'warning'">
+                            {{ d.isVerified ? 'Verified' : 'Unverified' }}
+                          </ion-chip>
+                          <ion-chip size="small" [color]="d.isActive ? 'success' : 'medium'">
+                            {{ d.isActive ? 'Active' : 'Inactive' }}
+                          </ion-chip>
+                          <ion-chip size="small" [color]="d.isOnline ? 'tertiary' : 'medium'" *ngIf="d.isOnline !== undefined">
+                            {{ d.isOnline ? 'Online' : 'Offline' }}
+                          </ion-chip>
+                        </div>
+                        <p class="driver-tile-earnings" *ngIf="d.totalEarnings !== undefined">
+                          Earnings: <strong>{{ d.totalEarnings | currency:'INR':'symbol-narrow':'1.2-2' }}</strong>
+                        </p>
+                        <ion-button
+                          expand="block"
+                          fill="solid"
+                          size="small"
+                          class="driver-tile-btn"
+                          (click)="openDriverDetail(d)">
+                          <ion-icon name="person-outline" slot="start"></ion-icon>
+                          View driver details
+                        </ion-button>
+                      </article>
+                    </ion-col>
+                  </ion-row>
+                </ion-grid>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+        </ion-row>
+
+        <ion-row>
+          <ion-col size="12" sizeLg="6">
+            <ion-card class="vendor-panel-card">
+              <ion-card-header>
+                <ion-card-title>Documents</ion-card-title>
+                <ion-card-subtitle>Aadhaar &amp; uploaded files</ion-card-subtitle>
+              </ion-card-header>
+              <ion-card-content>
+                <p *ngIf="documents.length === 0" class="muted">No documents uploaded.</p>
+                <ion-list *ngIf="documents.length > 0" lines="none" class="doc-list">
+                  <ion-item *ngFor="let doc of documents; let i = index" button (click)="openDocument(doc)" class="doc-item">
+                    <ion-icon name="document-text-outline" slot="start" color="primary"></ion-icon>
+                    <ion-label>Document {{ i + 1 }}</ion-label>
+                    <ion-icon name="open-outline" slot="end" color="medium"></ion-icon>
+                  </ion-item>
+                </ion-list>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+
+          <ion-col size="12" sizeLg="6">
+            <ion-card class="vendor-panel-card">
+              <ion-card-header>
+                <ion-card-title>Fleet vehicles</ion-card-title>
+                <ion-card-subtitle>Submitted for admin approval</ion-card-subtitle>
+              </ion-card-header>
+              <ion-card-content>
+                <p *ngIf="fleetLoading" class="ion-text-center muted">Loading fleet vehicles…</p>
+                <p *ngIf="!fleetLoading && fleetVehicles.length === 0" class="muted">No fleet vehicles for this vendor.</p>
+                <ng-container *ngFor="let fv of fleetVehicles">
+                  <div class="fleet-block">
+                    <div class="fleet-block-head">
+                      <h4 class="fleet-title">{{ fv.licensePlate }} · {{ fv.vehicleType }}</h4>
+                      <ion-badge [color]="fleetStatusColor(fv.approvalStatus)">{{ fv.approvalStatus }}</ion-badge>
+                    </div>
+                    <p class="fleet-desc">{{ fv.make }} {{ fv.model }} ({{ fv.year }}) — {{ fv.color }}</p>
+                    <p *ngIf="fv.rejectionReason" class="fleet-reject"><strong>Rejection:</strong> {{ fv.rejectionReason }}</p>
+                    <p *ngIf="fv.allowDocumentResubmit && fv.approvalStatus === 'REJECTED'" class="muted small">Vendor may re-upload documents.</p>
+                    <div *ngIf="fv.documents?.length" class="fleet-docs">
+                      <span *ngFor="let doc of fv.documents; let last = last">
+                        <ion-button
+                          size="small"
+                          fill="clear"
+                          (click)="openFleetDocumentUrl(doc.documentUrl)"
+                          [disabled]="!doc.documentUrl"
+                        >{{ doc.documentType }}</ion-button>{{ !last ? ' · ' : '' }}
+                      </span>
+                    </div>
+                    <div *ngIf="fv.approvalStatus === 'UNDER_APPROVAL'" class="fleet-actions">
+                      <ion-button size="small" color="success" (click)="approveFleetVehicle(fv)">Approve</ion-button>
+                      <ion-button size="small" fill="outline" color="medium" (click)="openFleetRejectModal(fv)">Reject</ion-button>
+                    </div>
+                  </div>
+                </ng-container>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+        </ion-row>
+
+        <ion-row>
+          <ion-col size="12" sizeMd="6">
+            <ion-card class="vendor-panel-card actions-card">
+              <ion-card-header>
+                <ion-card-title>Vendor actions</ion-card-title>
+              </ion-card-header>
+              <ion-card-content>
+                <div *ngIf="!vendor.isVerified" class="action-stack">
+                  <ion-button expand="block" color="success" (click)="verifyVendor()">Verify vendor</ion-button>
+                  <ion-button expand="block" color="medium" fill="outline" (click)="openRejectModal()">Reject</ion-button>
+                </div>
+                <div class="action-stack">
+                  <ion-button *ngIf="vendor.isActive" expand="block" color="warning" fill="outline" (click)="blockVendor()">Block vendor</ion-button>
+                  <ion-button *ngIf="!vendor.isActive" expand="block" color="success" fill="outline" (click)="unblockVendor()">Unblock vendor</ion-button>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+          <ion-col size="12" sizeMd="6" class="ion-align-self-center">
+            <ion-button expand="block" fill="outline" (click)="goBack()" class="back-wide">
+              <ion-icon name="arrow-back-outline" slot="start"></ion-icon>
+              Back to vendors
+            </ion-button>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </div>
+  </ng-container>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Loading vendor…</p>
+  </div>
+
+  <ion-card *ngIf="error && !isLoading" color="danger" class="error-banner">
+    <ion-card-content>
+      <p>{{ error }}</p>
+      <ion-button fill="outline" (click)="goBack()">Back to Vendors</ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-modal [isOpen]="fleetRejectModalOpen" (didDismiss)="closeFleetRejectModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Reject fleet vehicle</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeFleetRejectModal()">Cancel</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding reject-modal-content">
+        <p class="reject-modal-hint">
+          Reason is shown to the vendor. Optionally allow them to re-upload documents from the vendor panel.
+        </p>
+        <ion-item lines="none" class="reject-modal-field">
+          <ion-label position="stacked">Rejection reason <ion-text color="danger">*</ion-text></ion-label>
+          <ion-textarea
+            [(ngModel)]="fleetRejectReason"
+            rows="5"
+            placeholder="Explain what needs to change"
+            autoGrow="true"
+          ></ion-textarea>
+        </ion-item>
+        <ion-item lines="none" class="reject-modal-checkbox">
+          <ion-checkbox [(ngModel)]="fleetRejectAllowResubmit" slot="start"></ion-checkbox>
+          <ion-label class="ion-text-wrap">Allow vendor to re-upload documents</ion-label>
+        </ion-item>
+        <ion-button expand="block" color="danger" (click)="confirmFleetReject()">Reject vehicle</ion-button>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal [isOpen]="rejectModalOpen" (didDismiss)="closeRejectModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Reject vendor</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeRejectModal()">Cancel</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding reject-modal-content">
+        <p class="reject-modal-hint">
+          Enter a rejection reason. Optionally allow the vendor to re-upload documents from the vendor login screen.
+        </p>
+        <ion-item lines="none" class="reject-modal-field">
+          <ion-label position="stacked">Rejection reason <ion-text color="danger">*</ion-text></ion-label>
+          <ion-textarea
+            [(ngModel)]="rejectReason"
+            rows="5"
+            placeholder="Explain why the application was not approved"
+            autoGrow="true"
+          ></ion-textarea>
+        </ion-item>
+        <ion-item lines="none" class="reject-modal-checkbox">
+          <ion-checkbox [(ngModel)]="rejectAllowResubmit" slot="start"></ion-checkbox>
+          <ion-label class="ion-text-wrap">Allow vendor to re-upload documents</ion-label>
+        </ion-item>
+        <ion-button expand="block" color="danger" (click)="confirmReject()">Reject vendor</ion-button>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

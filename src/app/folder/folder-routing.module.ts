@@ -6,6 +6,11 @@ import { FolderPage } from './folder.page';
 const routes: Routes = [
   {
     path: '',
+    redirectTo: 'dashboard',
+    pathMatch: 'full'
+  },
+  {
+    path: 'dashboard',
     component: FolderPage
   },
   {
@@ -21,8 +26,48 @@ const routes: Routes = [
     loadChildren: () => import('./pages/drivers/drivers.module').then( m => m.DriversPageModule)
   },
   {
+    path: 'vendors',
+    loadChildren: () => import('./pages/vendors/vendors.module').then( m => m.VendorsPageModule)
+  },
+  {
+    path: 'vehicles',
+    loadChildren: () => import('./pages/vehicles/vehicles.module').then( m => m.VehiclesPageModule)
+  },
+  {
+    path: 'rides',
+    loadChildren: () => import('./pages/rides/rides.module').then( m => m.RidesPageModule)
+  },
+  {
+    path: 'driver-earnings',
+    loadChildren: () => import('./pages/driver-earnings/driver-earnings.module').then( m => m.DriverEarningsPageModule)
+  },
+  {
+    path: 'payouts',
+    loadChildren: () => import('./pages/payouts/payouts.module').then( m => m.PayoutsPageModule)
+  },
+  {
     path: 'settings',
     loadChildren: () => import('./pages/settings/settings.module').then( m => m.SettingsPageModule)
+  },
+  {
+    path: 'promo-codes',
+    loadChildren: () => import('./pages/promo-codes/promo-codes.module').then( m => m.PromoCodesPageModule)
+  },
+  {
+    path: 'support',
+    loadChildren: () => import('./pages/support/support-list/support-list.module').then( m => m.SupportListPageModule)
+  },
+  {
+    path: 'support/:issueId',
+    loadChildren: () => import('./pages/support/support-chat/support-chat.module').then( m => m.SupportChatPageModule)
+  },
+  {
+    path: 'emergencies',
+    loadChildren: () => import('./pages/emergencies/emergencies.module').then( m => m.EmergenciesPageModule)
+  },
+  {
+    path: '**',
+    redirectTo: 'dashboard'
   }
 ];
 

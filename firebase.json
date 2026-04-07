@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "cercacarsadmin",
     "public": "www",
     "ignore": [
       "firebase.json",

@@ -12,7 +12,59 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <div class="analytics-container">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <ion-spinner></ion-spinner>
+    <p>Loading analytics...</p>
+  </div>
+
+  <!-- Error State -->
+  <ion-card *ngIf="error && !isLoading" color="danger">
+    <ion-card-content>
+      <p>{{ error }}</p>
+      <ion-button fill="outline" (click)="loadAnalytics()">Retry</ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <div *ngIf="!isLoading && !error" class="analytics-container">
+    <!-- Filters -->
+    <ion-card class="filters-card">
+      <ion-card-header>
+        <ion-card-title>Filters</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">Start Date</ion-label>
+          <ion-input type="date" [(ngModel)]="startDate" (ionChange)="onDateFilterChange()"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">End Date</ion-label>
+          <ion-input type="date" [(ngModel)]="endDate" (ionChange)="onDateFilterChange()"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Group By</ion-label>
+          <ion-select [(ngModel)]="groupBy" (ionChange)="onGroupByChange()">
+            <ion-select-option value="day">Day</ion-select-option>
+            <ion-select-option value="week">Week</ion-select-option>
+            <ion-select-option value="month">Month</ion-select-option>
+          </ion-select>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Ride Heatmap -->
+    <ion-card class="summary-card" button routerLink="/folder/analytics/heatmap">
+      <ion-card-header>
+        <ion-card-title>Ride Demand Heatmap</ion-card-title>
+        <ion-card-subtitle>View pickup zones by ride volume (high / medium / low)</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-icon name="map-outline" size="large"></ion-icon>
+        <p>Open map with colored circles over locations with highest, medium, and lowest rides</p>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Platform Summary -->
     <ion-card class="summary-card">
       <ion-card-header>
         <ion-card-title>Platform Summary</ion-card-title>
@@ -39,9 +91,10 @@
       </ion-card-content>
     </ion-card>
 
+    <!-- Revenue Summary -->
     <ion-card class="summary-card">
       <ion-card-header>
-        <ion-card-title>Revenue</ion-card-title>
+        <ion-card-title>Revenue Summary</ion-card-title>
       </ion-card-header>
       <ion-card-content>
         <div class="summary-grid">
@@ -62,6 +115,93 @@
             <h3>{{ formatCurrency(earnings?.averageFarePerRide || 0) }}</h3>
           </div>
         </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Driver Earnings Summary -->
+    <ion-card *ngIf="driverEarningsAnalytics" class="summary-card">
+      <ion-card-header>
+        <ion-card-title>Driver Earnings Summary</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <p>Total Driver Earnings</p>
+            <h3>{{ formatCurrency(driverEarningsAnalytics?.totals?.totalDriverEarnings || 0) }}</h3>
+          </div>
+          <div class="summary-item">
+            <p>Total Platform Revenue</p>
+            <h3>{{ formatCurrency(driverEarningsAnalytics?.totals?.totalPlatformRevenue || 0) }}</h3>
+          </div>
+          <div class="summary-item">
+            <p>Total Driver Payouts</p>
+            <h3>{{ formatCurrency(driverEarningsAnalytics?.totals?.totalDriverPayouts || 0) }}</h3>
+          </div>
+          <div class="summary-item">
+            <p>Pending Payouts</p>
+            <h3>{{ driverEarningsAnalytics?.payouts?.pendingCount || 0 }}</h3>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Top Drivers by Earnings -->
+    <ion-card *ngIf="driverEarningsAnalytics?.topDrivers?.length" class="summary-card">
+      <ion-card-header>
+        <ion-card-title>Top Drivers by Earnings</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list>
+          <ion-item *ngFor="let driver of driverEarningsAnalytics.topDrivers; let i = index">
+            <ion-label>
+              <h3>#{{ i + 1 }} {{ driver.name }}</h3>
+              <p>{{ driver.rideCount }} rides</p>
+            </ion-label>
+            <ion-label slot="end" class="ion-text-end">
+              <h3>{{ formatCurrency(driver.totalEarnings) }}</h3>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Earnings by Period -->
+    <ion-card *ngIf="earnings?.earningsByPeriod?.length" class="summary-card">
+      <ion-card-header>
+        <ion-card-title>Earnings by {{ groupBy | titlecase }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list>
+          <ion-item *ngFor="let period of earnings.earningsByPeriod">
+            <ion-label>
+              <h3>{{ formatPeriod(period.period) }}</h3>
+              <p>{{ period.rides }} rides</p>
+            </ion-label>
+            <ion-label slot="end" class="ion-text-end">
+              <h3>{{ formatCurrency(period.earnings) }}</h3>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Top Earning Drivers -->
+    <ion-card *ngIf="earnings?.topEarningDrivers?.length" class="summary-card">
+      <ion-card-header>
+        <ion-card-title>Top Earning Drivers</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list>
+          <ion-item *ngFor="let driver of earnings.topEarningDrivers; let i = index">
+            <ion-label>
+              <h3>#{{ i + 1 }} {{ driver.driverName }}</h3>
+              <p>{{ driver.rides }} rides</p>
+            </ion-label>
+            <ion-label slot="end" class="ion-text-end">
+              <h3>{{ formatCurrency(driver.earnings) }}</h3>
+            </ion-label>
+          </ion-item>
+        </ion-list>
       </ion-card-content>
     </ion-card>
   </div>

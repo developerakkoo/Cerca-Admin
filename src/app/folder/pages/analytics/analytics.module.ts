@@ -6,6 +6,7 @@ import { IonicModule } from '@ionic/angular';
 
 import { AnalyticsPageRoutingModule } from './analytics-routing.module';
 import { AnalyticsPage } from './analytics.page';
+import { HeatmapPage } from './heatmap/heatmap.page';
 
 @NgModule({
   imports: [
@@ -14,7 +15,7 @@ import { AnalyticsPage } from './analytics.page';
     IonicModule,
     AnalyticsPageRoutingModule
   ],
-  declarations: [AnalyticsPage]
+  declarations: [AnalyticsPage, HeatmapPage]
 })
 export class AnalyticsPageModule {}
 

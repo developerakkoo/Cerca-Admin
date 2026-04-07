@@ -20,7 +20,13 @@ export class AdminAuthService {
   login(email: string, password: string): Observable<AdminLoginResponse> {
     return this.http
       .post<AdminLoginResponse>(`${this.baseUrl}/admin/login`, { email, password })
-      .pipe(tap((response) => this.setToken(response.token)));
+      .pipe(
+        tap((response) => {
+          if (response && response.token) {
+            this.setToken(response.token);
+          }
+        })
+      );
   }
 
   logout(): void {

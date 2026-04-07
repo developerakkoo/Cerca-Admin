@@ -15,9 +15,18 @@
               <ion-item routerDirection="root" [routerLink]="[p.url]" lines="none" detail="false" routerLinkActive="selected">
                 <ion-icon aria-hidden="true" slot="start" [ios]="p.icon + '-outline'" [md]="p.icon + '-sharp'"></ion-icon>
                 <ion-label>{{ p.title }}</ion-label>
+                <ion-badge *ngIf="p.title === 'Support Chat' && waitingIssuesCount > 0" color="danger" slot="end">{{ waitingIssuesCount }}</ion-badge>
+                <ion-badge *ngIf="p.title === 'Vehicles' && pendingVehiclesCount > 0" color="warning" slot="end">{{ pendingVehiclesCount }}</ion-badge>
               </ion-item>
             </ion-menu-toggle>
           }
+          
+          <ion-menu-toggle auto-hide="false">
+            <ion-item button (click)="logout()" lines="none" detail="false" color="danger">
+              <ion-icon aria-hidden="true" slot="start" ios="log-out-outline" md="log-out-sharp"></ion-icon>
+              <ion-label>Logout</ion-label>
+            </ion-item>
+          </ion-menu-toggle>
         </ion-list>
       </ion-content>
     </ion-menu>

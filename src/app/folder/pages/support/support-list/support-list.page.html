@@ -1,0 +1,81 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Support Chat</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Tab Navigation -->
+  <ion-segment [(ngModel)]="selectedTab" (ionChange)="onTabChange($event)" class="support-tabs">
+    <ion-segment-button value="waiting">
+      <ion-label>Waiting <ion-badge *ngIf="waitingIssues.length > 0" color="warning">{{ waitingIssues.length }}</ion-badge></ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="active">
+      <ion-label>Active <ion-badge *ngIf="activeIssues.length > 0" color="primary">{{ activeIssues.length }}</ion-badge></ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="resolved">
+      <ion-label>Resolved</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <ion-spinner></ion-spinner>
+    <p>Loading support issues...</p>
+  </div>
+
+  <!-- Issues List -->
+  <div *ngIf="!isLoading && getCurrentIssues().length > 0" class="issues-list">
+    <ion-card *ngFor="let issue of getCurrentIssues()" (click)="selectedTab === 'waiting' ? acceptIssue(issue) : openIssue(issue)" class="issue-card">
+      <ion-card-header>
+        <div class="issue-header">
+          <div class="issue-info">
+            <ion-icon [name]="getIssueTypeIcon(issue.issueType)" class="issue-icon"></ion-icon>
+            <div>
+              <h3>{{ issue.issueType }}</h3>
+              <p class="issue-user" *ngIf="issue.userId">
+                User: {{ getUserDisplayName(issue) }}
+              </p>
+              <p class="issue-id">ID: {{ issue._id }}</p>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <ion-badge *ngIf="getUnreadCount(issue._id) > 0" color="danger" style="font-size: 12px;">
+              {{ getUnreadCount(issue._id) }}
+            </ion-badge>
+            <ion-badge [color]="getStatusColor(issue.status)">
+              {{ getStatusText(issue.status) }}
+            </ion-badge>
+          </div>
+        </div>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="issue-meta">
+          <p><ion-icon name="time-outline"></ion-icon> {{ issue.createdAt | date:'short' }}</p>
+          <p *ngIf="issue.resolvedAt">
+            <ion-icon name="checkmark-circle-outline"></ion-icon> Resolved: {{ issue.resolvedAt | date:'short' }}
+          </p>
+        </div>
+        <ion-button *ngIf="selectedTab === 'waiting'" expand="block" color="primary" (click)="acceptIssue(issue); $event.stopPropagation()">
+          Accept Request
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && getCurrentIssues().length === 0" class="empty-state">
+    <ion-icon name="chatbubbles-outline" class="empty-icon"></ion-icon>
+    <h2>No Support Issues</h2>
+    <p *ngIf="selectedTab === 'waiting'">No waiting support requests.</p>
+    <p *ngIf="selectedTab === 'active'">No active support chats.</p>
+    <p *ngIf="selectedTab === 'resolved'">No resolved issues.</p>
+  </div>
+</ion-content>

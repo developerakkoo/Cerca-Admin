@@ -1,0 +1,71 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Emergencies</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense" class="ion-no-border">
+    <ion-toolbar>
+      <ion-title size="large">Emergencies</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-segment [(ngModel)]="statusFilter" (ionChange)="onFilterChange()">
+    <ion-segment-button value="all">
+      <ion-label>All</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="active">
+      <ion-label>Active</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="resolved">
+      <ion-label>Resolved</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="dismissed">
+      <ion-label>Dismissed</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <ion-spinner></ion-spinner>
+    <p>Loading emergencies...</p>
+  </div>
+
+  <ion-card *ngIf="error && !isLoading" color="danger">
+    <ion-card-content>
+      <p>{{ error }}</p>
+      <ion-button fill="outline" (click)="loadEmergencies()">Retry</ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-list *ngIf="!isLoading && !error" lines="full">
+    <ion-item *ngFor="let emergency of emergencies" button (click)="viewDetail(emergency)">
+      <ion-icon name="warning-outline" slot="start" color="danger"></ion-icon>
+      <ion-label>
+        <h2>Ride {{ getRideId(emergency) }}</h2>
+        <p>By {{ getReporterName(emergency) }} ({{ emergency.triggeredByModel || 'Unknown' }})</p>
+        <p>Reason: {{ emergency.reason || 'other' }} · {{ emergency.status }}</p>
+        <p>Location: {{ getLocationStr(emergency) }}</p>
+        <p>{{ emergency.createdAt | date:'short' }}</p>
+      </ion-label>
+      <ion-buttons slot="end">
+        <ion-button *ngIf="emergency.status === 'active'" fill="clear" color="success" (click)="resolve(emergency, $event)">
+          Resolve
+        </ion-button>
+        <ion-button *ngIf="emergency.status === 'active'" fill="clear" color="medium" (click)="dismiss(emergency, $event)">
+          Dismiss
+        </ion-button>
+        <ion-button fill="clear">View</ion-button>
+      </ion-buttons>
+    </ion-item>
+  </ion-list>
+
+  <ion-item *ngIf="!isLoading && !error && emergencies.length === 0" lines="none">
+    <ion-label class="ion-text-center">
+      <p>No emergencies found.</p>
+    </ion-label>
+  </ion-item>
+</ion-content>

@@ -1,0 +1,120 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/folder/support"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Support Chat</ion-title>
+    <ion-buttons slot="end">
+      <ion-button *ngIf="canResolve()" (click)="resolveIssue()" color="success">
+        <ion-icon name="checkmark-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="chat-content">
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- User Info Header -->
+  <div *ngIf="issue && issue.userId" class="user-info-header">
+    <ion-card>
+      <ion-card-content>
+          <div class="user-details">
+            <ion-icon name="person-circle-outline" class="user-icon"></ion-icon>
+            <div>
+              <h3>{{ getUserDisplayName() }}</h3>
+              <p *ngIf="getUserEmail()">{{ getUserEmail() }}</p>
+              <p class="issue-type">{{ issue.issueType }} Issue</p>
+            </div>
+          </div>
+        <ion-badge [color]="getStatusColor(issue.status)">
+          {{ getStatusText(issue.status) }}
+        </ion-badge>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <ion-spinner></ion-spinner>
+    <p>Loading chat...</p>
+  </div>
+
+  <!-- Messages Container -->
+  <div *ngIf="!isLoading" #messageContainer class="messages-container">
+    <!-- Empty State -->
+    <div *ngIf="messages.length === 0" class="empty-state">
+      <ion-icon name="chatbubbles-outline" class="empty-icon"></ion-icon>
+      <h2>No messages yet</h2>
+      <p>Wait for the user to send a message or start the conversation</p>
+    </div>
+
+    <!-- Messages -->
+    <div *ngFor="let message of messages" class="message-wrapper" [ngClass]="{'user-message': isUserMessage(message), 'admin-message': !isUserMessage(message) && !isSystemMessage(message), 'system-message': isSystemMessage(message)}">
+      <div class="message-bubble">
+        <p class="message-text">{{ message.message }}</p>
+        <span class="message-time">{{ message.createdAt | date:'shortTime' }}</span>
+      </div>
+    </div>
+
+    <!-- Typing Indicator -->
+    <div *ngIf="isUserTyping" class="typing-indicator">
+      <div class="typing-bubble">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <span class="typing-text">User is typing...</span>
+    </div>
+  </div>
+
+  <!-- Input Area -->
+  <div *ngIf="canSendMessage()" class="input-area">
+    <ion-item lines="none" class="message-input-item">
+      <ion-textarea
+        [(ngModel)]="newMessage"
+        placeholder="Type your message..."
+        rows="1"
+        maxlength="1000"
+        [disabled]="isSending"
+        (ionInput)="onMessageInput()"
+        (keydown.enter)="sendMessage()"
+        class="message-input"
+      ></ion-textarea>
+      <ion-button
+        slot="end"
+        (click)="sendMessage()"
+        [disabled]="!newMessage.trim() || isSending"
+        class="send-button"
+      >
+        <ion-icon name="send-outline"></ion-icon>
+      </ion-button>
+    </ion-item>
+  </div>
+
+  <!-- Accept Prompt -->
+  <div *ngIf="issue && issue.status === 'WAITING_FOR_ADMIN'" class="accept-prompt">
+    <ion-card>
+      <ion-card-content>
+        <h3>Accept Support Request</h3>
+        <p>This support request is waiting for an admin. Click below to accept it.</p>
+        <ion-button expand="block" (click)="acceptIssue()" color="primary">
+          Accept Request
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Resolved State -->
+  <div *ngIf="issue && (issue.status === 'RESOLVED' || issue.status === 'FEEDBACK_PENDING')" class="resolved-state">
+    <ion-card>
+      <ion-card-content>
+        <ion-icon name="checkmark-circle" color="success" class="resolved-icon"></ion-icon>
+        <h3>Chat {{ issue.status === 'RESOLVED' ? 'Resolved' : 'Ended' }}</h3>
+        <p>This support chat has been resolved.</p>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

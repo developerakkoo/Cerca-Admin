@@ -14,42 +14,240 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-searchbar
-    placeholder="Search by name, email, phone"
-    [(ngModel)]="searchTerm"
-    (ionChange)="onSearchChange()">
-  </ion-searchbar>
+  <div class="admin-list-container">
+    <!-- Search and Filter Bar -->
+    <ion-card class="filter-card">
+      <ion-card-content>
+        <div class="filter-row">
+          <ion-searchbar
+            placeholder="Search by name, email, phone"
+            [(ngModel)]="searchTerm"
+            (ionInput)="onSearchChange()"
+            class="search-bar">
+          </ion-searchbar>
+        </div>
+        <div class="filter-row">
+          <ion-segment [(ngModel)]="statusFilter" (ionChange)="onFilterChange()" class="filter-segment">
+            <ion-segment-button value="all">
+              <ion-label>All</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="active">
+              <ion-label>Active</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="blocked">
+              <ion-label>Blocked</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+          <ion-segment [(ngModel)]="verifiedFilter" (ionChange)="onVerifiedFilterChange()" class="filter-segment">
+            <ion-segment-button value="all">
+              <ion-label>All Verified</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="verified">
+              <ion-label>Verified</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="unverified">
+              <ion-label>Unverified</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+        </div>
+      </ion-card-content>
+    </ion-card>
 
-  <ion-segment [(ngModel)]="statusFilter" (ionChange)="loadUsers()">
-    <ion-segment-button value="all">
-      <ion-label>All</ion-label>
-    </ion-segment-button>
-    <ion-segment-button value="active">
-      <ion-label>Active</ion-label>
-    </ion-segment-button>
-    <ion-segment-button value="blocked">
-      <ion-label>Blocked</ion-label>
-    </ion-segment-button>
-  </ion-segment>
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Loading users...</p>
+    </div>
 
-  <ion-list lines="full">
-    <ion-item *ngFor="let user of users">
-      <ion-label>
-        <h2>{{ user.fullName }}</h2>
-        <p>{{ user.email }} • {{ user.phoneNumber || 'No phone' }}</p>
-        <p>Status: {{ user.isActive ? 'Active' : 'Blocked' }} • Verified: {{ user.isVerified ? 'Yes' : 'No' }}</p>
-      </ion-label>
-      <ion-buttons slot="end">
-        <ion-button fill="outline" size="small" (click)="toggleVerify(user)">
-          {{ user.isVerified ? 'Unverify' : 'Verify' }}
-        </ion-button>
-        <ion-button fill="outline" size="small" color="warning" (click)="toggleBlock(user)">
-          {{ user.isActive ? 'Block' : 'Unblock' }}
-        </ion-button>
-        <ion-button fill="outline" size="small" color="secondary" (click)="adjustWallet(user)">
-          Wallet
-        </ion-button>
-      </ion-buttons>
-    </ion-item>
-  </ion-list>
+    <!-- Error State -->
+    <ion-card *ngIf="error && !isLoading" color="danger" class="error-card">
+      <ion-card-content>
+        <p>{{ error }}</p>
+        <ion-button fill="outline" (click)="loadUsers(currentPage)">Retry</ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Users Table -->
+    <ion-card *ngIf="!isLoading && !error" class="table-card">
+      <ion-card-content>
+        <div class="table-wrapper">
+          <table class="admin-data-table">
+            <thead>
+              <tr>
+                <th class="sortable" (click)="onSort('fullName')">
+                  <div class="th-content">
+                    <span>User</span>
+                    <ion-icon [name]="getSortIcon('fullName')" [class.active]="sortBy === 'fullName'"></ion-icon>
+                  </div>
+                </th>
+                <th class="sortable" (click)="onSort('email')">
+                  <div class="th-content">
+                    <span>Email</span>
+                    <ion-icon [name]="getSortIcon('email')" [class.active]="sortBy === 'email'"></ion-icon>
+                  </div>
+                </th>
+                <th>Phone</th>
+                <th class="sortable" (click)="onSort('walletBalance')">
+                  <div class="th-content">
+                    <span>Wallet</span>
+                    <ion-icon [name]="getSortIcon('walletBalance')" [class.active]="sortBy === 'walletBalance'"></ion-icon>
+                  </div>
+                </th>
+                <th>Status</th>
+                <th>Verified</th>
+                <th class="sortable" (click)="onSort('createdAt')">
+                  <div class="th-content">
+                    <span>Created</span>
+                    <ion-icon [name]="getSortIcon('createdAt')" [class.active]="sortBy === 'createdAt'"></ion-icon>
+                  </div>
+                </th>
+                <th class="actions-header">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let user of users" class="table-row">
+                <td class="user-cell">
+                  <div class="user-info">
+                    <div class="avatar" [style.background-image]="user.profilePic ? 'url(' + user.profilePic + ')' : 'none'">
+                      <span *ngIf="!user.profilePic" class="avatar-initials">{{ getInitials(user.fullName) }}</span>
+                    </div>
+                    <span class="user-name">{{ user.fullName }}</span>
+                  </div>
+                </td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.phoneNumber || 'N/A' }}</td>
+                <td class="wallet-cell">{{ user.walletBalance | currency:'INR':'symbol-narrow':'1.2-2' }}</td>
+                <td>
+                  <span class="badge" [class.badge-active]="user.isActive" [class.badge-blocked]="!user.isActive">
+                    {{ user.isActive ? 'Active' : 'Blocked' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge" [class.badge-verified]="user.isVerified" [class.badge-unverified]="!user.isVerified">
+                    <ion-icon *ngIf="user.isVerified" name="checkmark-circle" class="badge-icon"></ion-icon>
+                    {{ user.isVerified ? 'Verified' : 'Unverified' }}
+                  </span>
+                </td>
+                <td>{{ formatDate(user.createdAt) }}</td>
+                <td class="actions-cell">
+                  <ion-button fill="clear" size="small" (click)="editUser(user)" class="action-btn">
+                    <ion-icon name="create-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-button fill="clear" size="small" (click)="toggleBlock(user)" [color]="user.isActive ? 'warning' : 'success'" class="action-btn">
+                    <ion-icon [name]="user.isActive ? 'ban-outline' : 'checkmark-circle-outline'" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-button fill="clear" size="small" (click)="toggleVerify(user)" [color]="user.isVerified ? 'medium' : 'success'" class="action-btn">
+                    <ion-icon [name]="user.isVerified ? 'close-circle-outline' : 'checkmark-circle-outline'" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-button fill="clear" size="small" (click)="adjustWallet(user)" color="secondary" class="action-btn">
+                    <ion-icon name="wallet-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-button fill="clear" size="small" (click)="deleteUser(user)" color="danger" class="action-btn">
+                    <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="users.length === 0" class="empty-state">
+          <ion-icon name="people-outline" class="empty-icon"></ion-icon>
+          <p>No users found</p>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Pagination -->
+    <ion-card *ngIf="!isLoading && !error && users.length > 0" class="pagination-card">
+      <ion-card-content>
+        <div class="pagination-container">
+          <div class="pagination-info">
+            <span>{{ getDisplayRange() }}</span>
+            <div class="limit-selector">
+              <label>Items per page:</label>
+              <ion-select [(ngModel)]="limit" (ionChange)="onLimitChange()" interface="popover">
+                <ion-select-option *ngFor="let opt of limitOptions" [value]="opt">{{ opt }}</ion-select-option>
+              </ion-select>
+            </div>
+          </div>
+          <div class="pagination-controls" *ngIf="totalPages > 1">
+            <ion-button fill="clear" [disabled]="currentPage === 1" (click)="previousPage()">
+              <ion-icon name="chevron-back-outline" slot="start"></ion-icon>
+              Previous
+            </ion-button>
+            <div class="page-numbers">
+              <ion-button 
+                *ngFor="let page of getPageNumbers()" 
+                fill="clear" 
+                [class.active]="page === currentPage"
+                (click)="goToPage(page)">
+                {{ page }}
+              </ion-button>
+            </div>
+            <ion-button fill="clear" [disabled]="currentPage === totalPages" (click)="nextPage()">
+              Next
+              <ion-icon name="chevron-forward-outline" slot="end"></ion-icon>
+            </ion-button>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Edit User Modal Overlay -->
+  <div *ngIf="editingUser !== null" class="modal-overlay" (click)="cancelEdit()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <ion-card class="edit-modal-card">
+        <ion-card-header>
+          <div class="modal-header">
+            <ion-title>Edit User</ion-title>
+            <ion-button fill="clear" (click)="cancelEdit()">
+              <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+        </ion-card-header>
+        <ion-card-content>
+          <!-- Profile Picture Preview -->
+          <div class="profile-pic-section">
+            <div class="profile-pic-preview">
+              <div class="avatar-large" [style.background-image]="profilePicPreview ? 'url(' + profilePicPreview + ')' : 'none'">
+                <span *ngIf="!profilePicPreview" class="avatar-initials-large">{{ getInitials(editFormData.fullName || '') }}</span>
+              </div>
+              <ion-button fill="outline" size="small" (click)="fileInput.click()">
+                <ion-icon name="camera-outline" slot="start"></ion-icon>
+                Change Photo
+              </ion-button>
+              <input #fileInput type="file" accept="image/*" style="display: none" (change)="onFileSelected($event)">
+            </div>
+          </div>
+
+          <!-- Form Fields -->
+          <ion-item class="form-item">
+            <ion-label position="stacked">Full Name *</ion-label>
+            <ion-input [(ngModel)]="editFormData.fullName" placeholder="Enter full name"></ion-input>
+          </ion-item>
+
+          <ion-item class="form-item">
+            <ion-label position="stacked">Email *</ion-label>
+            <ion-input type="email" [(ngModel)]="editFormData.email" placeholder="Enter email"></ion-input>
+          </ion-item>
+
+          <ion-item class="form-item">
+            <ion-label position="stacked">Phone Number</ion-label>
+            <ion-input type="tel" [(ngModel)]="editFormData.phoneNumber" placeholder="Enter phone number"></ion-input>
+          </ion-item>
+
+          <div class="modal-actions">
+            <ion-button fill="outline" (click)="cancelEdit()">Cancel</ion-button>
+            <ion-button (click)="saveUser()" [disabled]="isLoading">
+              <span *ngIf="isLoading">Saving...</span>
+              <span *ngIf="!isLoading">Save Changes</span>
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
 </ion-content>

@@ -14,48 +14,201 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-searchbar
-    placeholder="Search by name, email, phone"
-    [(ngModel)]="searchTerm"
-    (ionChange)="onSearchChange()">
-  </ion-searchbar>
+  <div class="admin-list-container">
+    <ion-card class="filter-card">
+      <ion-card-content>
+        <div class="filter-row filter-row-search-dropdown">
+          <ion-searchbar
+            placeholder="Search by name, email, phone"
+            [(ngModel)]="searchTerm"
+            (ionInput)="onSearchInput()"
+            class="search-bar search-bar-flex">
+          </ion-searchbar>
+          <ion-item lines="none" class="filter-dropdown-item">
+            <ion-select
+              label="Verification"
+              labelPlacement="stacked"
+              interface="popover"
+              [(ngModel)]="verifiedFilter"
+              (ionChange)="onFilterChange()">
+              <ion-select-option value="all">All</ion-select-option>
+              <ion-select-option value="verified">Verified</ion-select-option>
+              <ion-select-option value="pending">Pending</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </div>
+        <div class="filter-row">
+          <ion-segment [(ngModel)]="statusFilter" (ionChange)="onFilterChange()" scrollable="true" class="filter-segment">
+            <ion-segment-button value="all">
+              <ion-label>All</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="pendingAdmin">
+              <ion-label>Vendor → admin</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="active">
+              <ion-label>Active</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="new">
+              <ion-label>New</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="priorityPending">
+              <ion-label>Priority pending</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="vehiclePending">
+              <ion-label>Vehicle pending</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+        </div>
+      </ion-card-content>
+    </ion-card>
 
-  <ion-segment [(ngModel)]="statusFilter" (ionChange)="loadDrivers()">
-    <ion-segment-button value="all">
-      <ion-label>All</ion-label>
-    </ion-segment-button>
-    <ion-segment-button value="active">
-      <ion-label>Active</ion-label>
-    </ion-segment-button>
-    <ion-segment-button value="pending">
-      <ion-label>Pending</ion-label>
-    </ion-segment-button>
-  </ion-segment>
+    <div *ngIf="isLoading" class="loading-container">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Loading drivers...</p>
+    </div>
 
-  <ion-list lines="full">
-    <ion-item *ngFor="let driver of drivers">
-      <ion-label>
-        <h2>{{ driver.name }}</h2>
-        <p>{{ driver.email }} • {{ driver.phone }}</p>
-        <p>Status: {{ driver.isActive ? 'Active' : 'Pending/Blocked' }} • Verified: {{ driver.isVerified ? 'Yes' : 'No' }}</p>
-      </ion-label>
-      <ion-buttons slot="end">
-        <ion-button fill="outline" size="small" (click)="approveDriver(driver)">
-          Approve
-        </ion-button>
-        <ion-button fill="outline" size="small" color="medium" (click)="rejectDriver(driver)">
-          Reject
-        </ion-button>
-        <ion-button fill="outline" size="small" (click)="toggleVerify(driver)">
-          {{ driver.isVerified ? 'Unverify' : 'Verify' }}
-        </ion-button>
-        <ion-button fill="outline" size="small" color="warning" (click)="toggleBlock(driver)">
-          {{ driver.isActive ? 'Block' : 'Unblock' }}
-        </ion-button>
-        <ion-button fill="outline" size="small" color="secondary" (click)="viewDocuments(driver)">
-          Docs
-        </ion-button>
-      </ion-buttons>
-    </ion-item>
-  </ion-list>
+    <ion-card *ngIf="error && !isLoading" color="danger" class="error-card">
+      <ion-card-content>
+        <p>{{ error }}</p>
+        <ion-button fill="outline" (click)="loadDrivers(currentPage)">Retry</ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="!isLoading && !error" class="table-card">
+      <ion-card-content>
+        <div class="table-wrapper">
+          <table class="admin-data-table">
+            <thead>
+              <tr>
+                <th>Driver</th>
+                <th>Contact</th>
+                <th>Approval</th>
+                <th>Status</th>
+                <th>Verified</th>
+                <th>Online</th>
+                <th>Notes</th>
+                <th>Earnings</th>
+                <th class="actions-header">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let driver of drivers" class="table-row table-row-click" (click)="viewDriver(driver)">
+                <td class="driver-cell">
+                  <div class="driver-info">
+                    <div class="avatar" [style.background-image]="driver.profilePic ? 'url(' + driver.profilePic + ')' : 'none'">
+                      <span *ngIf="!driver.profilePic" class="avatar-initials">{{ getInitials(driver.name) }}</span>
+                    </div>
+                    <span class="driver-name">{{ driver.name }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="cell-stack">
+                    <span>{{ driver.email || '—' }}</span>
+                    <span class="cell-muted">{{ driver.phone || '—' }}</span>
+                  </div>
+                </td>
+                <td>
+                  <ion-badge *ngIf="driver.approvalStatus" [color]="approvalColor(driver.approvalStatus)">
+                    {{ approvalLabel(driver.approvalStatus) }}
+                  </ion-badge>
+                  <span *ngIf="!driver.approvalStatus" class="cell-muted">—</span>
+                </td>
+                <td>
+                  <span class="badge" [class.badge-active]="driver.isActive" [class.badge-blocked]="!driver.isActive">
+                    {{ driver.isActive ? 'Active' : 'Pending/Blocked' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge" [class.badge-verified]="driver.isVerified" [class.badge-unverified]="!driver.isVerified">
+                    {{ driver.isVerified ? 'Yes' : 'No' }}
+                  </span>
+                </td>
+                <td>
+                  <span *ngIf="driver.isOnline !== undefined" [class]="driver.isOnline ? 'txt-online' : 'txt-offline'">
+                    {{ driver.isOnline ? 'Online' : 'Offline' }}
+                  </span>
+                  <span *ngIf="driver.isOnline === undefined" class="cell-muted">—</span>
+                </td>
+                <td>
+                  <div class="cell-stack cell-stack-tight">
+                    <span *ngIf="driver.isPriorityDriver" class="cell-note">Priority: approved</span>
+                    <span *ngIf="driver.priorityDocument && !driver.isPriorityDriver" class="cell-note warn">Priority: pending</span>
+                    <span *ngIf="driver.vehicleStatus === 'UNDER_APPROVAL'"><ion-badge color="warning">Vehicle pending</ion-badge></span>
+                    <span *ngIf="driver.vehicleStatus === 'REJECTED'"><ion-badge color="danger">Vehicle rejected</ion-badge></span>
+                    <span *ngIf="!driver.isPriorityDriver && !driver.priorityDocument && driver.vehicleStatus !== 'UNDER_APPROVAL' && driver.vehicleStatus !== 'REJECTED'" class="cell-muted">—</span>
+                  </div>
+                </td>
+                <td>
+                  <span *ngIf="driver.totalEarnings !== undefined" class="wallet-cell">
+                    {{ driver.totalEarnings | currency:'INR':'symbol-narrow':'1.2-2' }}
+                  </span>
+                  <span *ngIf="driver.totalEarnings === undefined" class="cell-muted">—</span>
+                </td>
+                <td class="actions-cell" (click)="$event.stopPropagation()">
+                  <ion-button *ngIf="canAdminFinalApproveOrReject(driver)" fill="clear" size="small" color="success" class="action-btn" (click)="approveDriver(driver)">
+                    <ion-icon name="checkmark-circle-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-button *ngIf="canAdminFinalApproveOrReject(driver)" fill="clear" size="small" color="medium" class="action-btn" (click)="rejectDriver(driver, $event)">
+                    <ion-icon name="close-circle-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-button fill="clear" size="small" class="action-btn" (click)="toggleVerify(driver)">
+                    <ion-icon [name]="driver.isVerified ? 'close-circle-outline' : 'checkmark-circle-outline'" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-button fill="clear" size="small" [color]="driver.isActive ? 'warning' : 'success'" class="action-btn" (click)="toggleBlock(driver)">
+                    <ion-icon [name]="driver.isActive ? 'ban-outline' : 'checkmark-circle-outline'" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-button fill="clear" size="small" color="secondary" class="action-btn" (click)="viewDocuments(driver)">
+                    <ion-icon name="document-text-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-button fill="clear" size="small" color="primary" class="action-btn" (click)="viewEarnings(driver, $event)">
+                    <ion-icon name="cash-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div *ngIf="drivers.length === 0" class="empty-state">
+          <ion-icon name="car-outline" class="empty-icon"></ion-icon>
+          <p>No drivers found</p>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="!isLoading && !error && drivers.length > 0" class="pagination-card">
+      <ion-card-content>
+        <div class="pagination-container">
+          <div class="pagination-info">
+            <span>{{ getDisplayRange() }}</span>
+            <div class="limit-selector">
+              <label>Items per page:</label>
+              <ion-select [(ngModel)]="limit" (ionChange)="onLimitChange()" interface="popover">
+                <ion-select-option *ngFor="let opt of limitOptions" [value]="opt">{{ opt }}</ion-select-option>
+              </ion-select>
+            </div>
+          </div>
+          <div class="pagination-controls" *ngIf="totalPages > 1">
+            <ion-button fill="clear" [disabled]="currentPage === 1" (click)="previousPage()">
+              <ion-icon name="chevron-back-outline" slot="start"></ion-icon>
+              Previous
+            </ion-button>
+            <div class="page-numbers">
+              <ion-button
+                *ngFor="let page of getPageNumbers()"
+                fill="clear"
+                [class.active]="page === currentPage"
+                (click)="goToPage(page)">
+                {{ page }}
+              </ion-button>
+            </div>
+            <ion-button fill="clear" [disabled]="currentPage === totalPages" (click)="nextPage()">
+              Next
+              <ion-icon name="chevron-forward-outline" slot="end"></ion-icon>
+            </ion-button>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
 </ion-content>

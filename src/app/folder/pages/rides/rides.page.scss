@@ -1,0 +1,45 @@
+.table-row-click {
+  cursor: pointer;
+}
+
+.rides-filter-row {
+  flex-wrap: wrap;
+  align-items: flex-end !important;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+  }
+}
+
+.rides-filter-item {
+  flex: 1 1 160px;
+  --min-height: 72px;
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  margin: 0;
+}
+
+.cell-muted {
+  color: var(--ion-color-medium);
+}
+
+.status-requested,
+.status-accepted,
+.status-arrived,
+.status-in_progress {
+  color: var(--ion-color-primary);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.status-completed {
+  color: var(--ion-color-success);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.status-cancelled {
+  color: var(--ion-color-danger);
+  font-weight: 600;
+  font-size: 0.8rem;
+}

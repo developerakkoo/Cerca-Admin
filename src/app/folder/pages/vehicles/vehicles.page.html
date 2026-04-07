@@ -1,0 +1,135 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Vehicles</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense" class="ion-no-border">
+    <ion-toolbar>
+      <ion-title size="large">Vehicles</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="admin-list-container">
+    <ion-card class="filter-card">
+      <ion-card-content>
+        <div class="filter-row filter-row-search-dropdown">
+          <ion-searchbar
+            placeholder="Search plate, make, model, driver…"
+            [(ngModel)]="searchTerm"
+            (ionInput)="onSearchInput()"
+            class="search-bar search-bar-flex">
+          </ion-searchbar>
+          <ion-item lines="none" class="filter-dropdown-item">
+            <ion-select
+              label="Approval"
+              labelPlacement="stacked"
+              interface="popover"
+              [(ngModel)]="statusFilter"
+              (ionChange)="onFilterChange()">
+              <ion-select-option value="all">All</ion-select-option>
+              <ion-select-option value="UNDER_APPROVAL">Pending</ion-select-option>
+              <ion-select-option value="APPROVED">Approved</ion-select-option>
+              <ion-select-option value="REJECTED">Rejected</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </div>
+        <div class="filter-row">
+          <ion-segment [(ngModel)]="ownershipFilter" (ionChange)="onFilterChange()" scrollable="true" class="filter-segment">
+            <ion-segment-button value="all">
+              <ion-label>All</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="fleet">
+              <ion-label>Vendor fleet</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="personal">
+              <ion-label>Driver personal</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <div class="vendor-select-wrap" *ngIf="ownershipFilter !== 'personal' && vendors.length">
+      <ion-item lines="none">
+        <ion-select
+          label="Vendor filter"
+          labelPlacement="stacked"
+          placeholder="All vendors"
+          [(ngModel)]="vendorId"
+          (ionChange)="onFilterChange()">
+          <ion-select-option value="">All vendors</ion-select-option>
+          <ion-select-option *ngFor="let v of vendors" [value]="v._id">{{ v.businessName }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+    </div>
+
+    @if (inventory && !error) {
+      <div class="stats-row">
+        <ion-chip outline="true">
+          <ion-label>Total {{ inventory.totalVehicles }}</ion-label>
+        </ion-chip>
+        <ion-chip outline="true" color="primary">
+          <ion-label>Fleet {{ inventory.fleetVehicleCount }}</ion-label>
+        </ion-chip>
+        <ion-chip outline="true" color="tertiary">
+          <ion-label>Personal {{ inventory.standaloneVehicleCount }}</ion-label>
+        </ion-chip>
+      </div>
+    }
+
+    <div *ngIf="isLoading" class="loading-container">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Loading vehicles…</p>
+    </div>
+
+    <ion-card *ngIf="error && !isLoading" color="danger" class="error-card">
+      <ion-card-content>
+        <p>{{ error }}</p>
+        <ion-button fill="outline" (click)="onFilterChange()">Retry</ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-list *ngIf="!isLoading && !error" lines="full">
+      <ion-item
+        *ngFor="let row of vehicles"
+        button
+        (click)="openVehicle(row)"
+        [detail]="true">
+        <ion-label>
+          <h2 class="plate">{{ row.licensePlate || '—' }}</h2>
+          <p>
+            {{ row.make }} {{ row.model }}
+            <span *ngIf="row.vehicleType"> · {{ row.vehicleType }}</span>
+          </p>
+          <p class="subline">
+            <ion-badge [color]="badgeColor(row.approvalStatus)">{{ row.approvalStatus }}</ion-badge>
+            <span *ngIf="row.vehicleRecordType === 'VENDOR_FLEET'" class="ion-margin-start">Fleet</span>
+            <span *ngIf="row.vehicleRecordType === 'DRIVER_PERSONAL'" class="ion-margin-start">Personal</span>
+            <span *ngIf="assignmentHint(row)" class="ion-margin-start"> · {{ assignmentHint(row) }}</span>
+          </p>
+          <p class="subline">{{ ownershipLabel(row) }}</p>
+        </ion-label>
+      </ion-item>
+
+      <ion-item *ngIf="vehicles.length === 0">
+        <ion-label class="ion-text-center">
+          <ng-container *ngIf="searchTerm || statusFilter !== 'all' || ownershipFilter !== 'all' || vendorId">
+            No vehicles match your filters.
+          </ng-container>
+          <ng-container *ngIf="!searchTerm && statusFilter === 'all' && ownershipFilter === 'all' && !vendorId">
+            No vehicles in inventory.
+          </ng-container>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  </div>
+</ion-content>

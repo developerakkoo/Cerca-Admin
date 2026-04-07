@@ -3,19 +3,35 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>{{ isDashboard ? 'Dashboard' : folder }}</ion-title>
+    <ion-title>Dashboard</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" class="dashboard-content">
   <ion-header collapse="condense" class="ion-no-border">
     <ion-toolbar>
-      <ion-title size="large">{{ isDashboard ? 'Dashboard' : folder }}</ion-title>
+      <ion-title size="large">Dashboard</ion-title>
     </ion-toolbar>
   </ion-header>
 
   <!-- Dashboard View -->
-  <div *ngIf="isDashboard" class="dashboard-container">
+  <div *ngIf="shouldShowContent" class="dashboard-container">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <ion-spinner></ion-spinner>
+      <p>Loading dashboard...</p>
+    </div>
+
+    <!-- Error State -->
+    <ion-card *ngIf="error && !isLoading" color="danger">
+      <ion-card-content>
+        <p>{{ error }}</p>
+        <ion-button fill="outline" (click)="loadDashboard()">Retry</ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Dashboard Content -->
+    <div *ngIf="!isLoading && !error">
     <!-- Welcome Section -->
     <div class="welcome-section">
       <h1 class="welcome-title">Welcome Back, Admin!</h1>
@@ -32,26 +48,32 @@
           <div class="stat-info">
             <h3 class="stat-value">{{ dashboardStats.totalUsers | number }}</h3>
             <p class="stat-label">Total Users</p>
-            <span class="stat-change positive">
-              <ion-icon name="arrow-up-outline"></ion-icon>
-              +12% from last month
-            </span>
           </div>
         </ion-card-content>
       </ion-card>
 
       <ion-card class="stat-card">
         <ion-card-content>
-          <div class="stat-icon drivers">
-            <ion-icon name="car-outline"></ion-icon>
+          <div class="stat-icon stat-icon-online">
+            <ion-icon name="radio-button-on-outline"></ion-icon>
           </div>
           <div class="stat-info">
-            <h3 class="stat-value">{{ dashboardStats.activeDrivers | number }}</h3>
-            <p class="stat-label">Active Drivers</p>
-            <span class="stat-change positive">
-              <ion-icon name="arrow-up-outline"></ion-icon>
-              +8% from last month
-            </span>
+            <h3 class="stat-value">{{ dashboardStats.driversOnline | number }}</h3>
+            <p class="stat-label">Drivers online</p>
+            <p class="stat-hint">isOnline true</p>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="stat-card">
+        <ion-card-content>
+          <div class="stat-icon stat-icon-offline">
+            <ion-icon name="radio-button-off-outline"></ion-icon>
+          </div>
+          <div class="stat-info">
+            <h3 class="stat-value">{{ dashboardStats.driversOffline | number }}</h3>
+            <p class="stat-label">Drivers offline</p>
+            <p class="stat-hint">isOnline false</p>
           </div>
         </ion-card-content>
       </ion-card>
@@ -64,57 +86,82 @@
           <div class="stat-info">
             <h3 class="stat-value">{{ dashboardStats.totalRides | number }}</h3>
             <p class="stat-label">Total Rides</p>
-            <span class="stat-change positive">
-              <ion-icon name="arrow-up-outline"></ion-icon>
-              +15% from last month
-            </span>
-          </div>
-        </ion-card-content>
-      </ion-card>
-
-      <ion-card class="stat-card">
-        <ion-card-content>
-          <div class="stat-icon revenue">
-            <ion-icon name="cash-outline"></ion-icon>
-          </div>
-          <div class="stat-info">
-            <h3 class="stat-value">{{ formatCurrency(dashboardStats.revenue) }}</h3>
-            <p class="stat-label">Total Revenue</p>
-            <span class="stat-change positive">
-              <ion-icon name="arrow-up-outline"></ion-icon>
-              +22% from last month
-            </span>
           </div>
         </ion-card-content>
       </ion-card>
     </div>
 
-    <!-- Quick Stats Row -->
+    <!-- Pending approvals + completed rides -->
     <div class="quick-stats-row">
-      <ion-card class="quick-stat-card">
+      <ion-card class="pending-approvals-card">
+        <ion-card-header>
+          <ion-card-title>Pending approvals</ion-card-title>
+        </ion-card-header>
         <ion-card-content>
-          <div class="quick-stat-content">
-            <ion-icon name="time-outline" class="quick-stat-icon"></ion-icon>
-            <div>
-              <h4>{{ dashboardStats.pendingRequests }}</h4>
-              <p>Pending Requests</p>
+          <div class="pending-approvals-grid">
+            <div class="pending-approval-col">
+              <span class="pending-approval-value">{{ dashboardStats.pendingVehicles | number }}</span>
+              <span class="pending-approval-label">Vehicles</span>
+            </div>
+            <div class="pending-approval-col">
+              <span class="pending-approval-value">{{ dashboardStats.pendingDrivers | number }}</span>
+              <span class="pending-approval-label">Drivers</span>
+            </div>
+            <div class="pending-approval-col">
+              <span class="pending-approval-value">{{ dashboardStats.pendingVendors | number }}</span>
+              <span class="pending-approval-label">Vendors</span>
             </div>
           </div>
         </ion-card-content>
       </ion-card>
 
-      <ion-card class="quick-stat-card">
+      <ion-card class="pending-approvals-card rides-outcomes-card">
+        <ion-card-header>
+          <ion-card-title>Rides</ion-card-title>
+        </ion-card-header>
         <ion-card-content>
-          <div class="quick-stat-content">
-            <ion-icon name="checkmark-done-outline" class="quick-stat-icon"></ion-icon>
-            <div>
-              <h4>{{ dashboardStats.completedRides | number }}</h4>
-              <p>Completed Rides</p>
+          <div class="pending-approvals-grid rides-outcomes-grid">
+            <div class="pending-approval-col">
+              <span class="pending-approval-value">{{ dashboardStats.completedRides | number }}</span>
+              <span class="pending-approval-label">Completed</span>
+            </div>
+            <div class="pending-approval-col">
+              <span class="pending-approval-value">{{ dashboardStats.cancelledRides | number }}</span>
+              <span class="pending-approval-label">Cancelled</span>
             </div>
           </div>
         </ion-card-content>
       </ion-card>
     </div>
+
+    <!-- Support Statistics Card -->
+    <ion-card class="support-card" (click)="navigateToSupport()" *ngIf="supportStats.waiting > 0 || supportStats.active > 0">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="chatbubbles-outline"></ion-icon>
+          Support Chat
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="support-stats">
+          <div class="support-stat-item">
+            <ion-badge color="warning">{{ supportStats.waiting }}</ion-badge>
+            <span>Waiting</span>
+          </div>
+          <div class="support-stat-item">
+            <ion-badge color="primary">{{ supportStats.active }}</ion-badge>
+            <span>Active</span>
+          </div>
+          <div class="support-stat-item">
+            <ion-badge color="success">{{ supportStats.resolved }}</ion-badge>
+            <span>Resolved</span>
+          </div>
+        </div>
+        <ion-button expand="block" fill="outline" (click)="navigateToSupport(); $event.stopPropagation()">
+          View Support Chat
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
 
     <!-- Recent Activities -->
     <ion-card class="activities-card">
@@ -134,6 +181,23 @@
       </ion-card-content>
     </ion-card>
 
+    <!-- Emergencies Card -->
+    <ion-card class="support-card" (click)="navigateToEmergencies()" *ngIf="dashboardStats.activeEmergencies > 0">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="warning-outline"></ion-icon>
+          Emergencies
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-badge color="danger">{{ dashboardStats.activeEmergencies }}</ion-badge>
+        <span>Active emergency alert(s)</span>
+        <ion-button expand="block" fill="outline" (click)="navigateToEmergencies(); $event.stopPropagation()">
+          View Emergencies
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
     <!-- Quick Actions -->
     <ion-card class="actions-card">
       <ion-card-header>
@@ -149,6 +213,10 @@
             <ion-icon name="car-outline" slot="start"></ion-icon>
             Manage Drivers
           </ion-button>
+          <ion-button fill="outline" routerLink="/folder/emergencies" class="action-button">
+            <ion-icon name="warning-outline" slot="start"></ion-icon>
+            Emergencies
+          </ion-button>
           <ion-button fill="outline" routerLink="/folder/settings" class="action-button">
             <ion-icon name="settings-outline" slot="start"></ion-icon>
             Settings
@@ -156,11 +224,7 @@
         </div>
       </ion-card-content>
     </ion-card>
+    </div>
   </div>
 
-  <!-- Default Folder View (for other folder pages) -->
-  <div *ngIf="!isDashboard" id="container">
-    <strong class="capitalize">{{ folder }}</strong>
-    <p>Explore <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
-  </div>
 </ion-content>

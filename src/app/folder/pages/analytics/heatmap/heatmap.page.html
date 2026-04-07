@@ -1,0 +1,82 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/folder/analytics"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Ride Demand Heatmap</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="heatmap-content">
+  <ion-refresher slot="fixed" (ionRefresh)="loadHeatmap(); $event.target.complete()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <ion-spinner></ion-spinner>
+    <p>Loading heatmap...</p>
+  </div>
+
+  <ion-card *ngIf="error && !isLoading" color="danger">
+    <ion-card-content>
+      <p>{{ error }}</p>
+      <ion-button fill="outline" (click)="loadHeatmap()">Retry</ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <div *ngIf="!isLoading && !error" class="heatmap-container">
+    <!-- Filters -->
+    <ion-card class="filters-card">
+      <ion-card-header>
+        <ion-card-title>Filters</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">Start Date</ion-label>
+          <ion-input type="date" [(ngModel)]="startDate" (ionChange)="onDateFilterChange()"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">End Date</ion-label>
+          <ion-input type="date" [(ngModel)]="endDate" (ionChange)="onDateFilterChange()"></ion-input>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Legend -->
+    <ion-card class="legend-card">
+      <ion-card-header>
+        <ion-card-title>Demand Zones</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="legend-items">
+          <div class="legend-item">
+            <span class="legend-dot high"></span>
+            <span>High (most rides)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot medium"></span>
+            <span>Medium</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot low"></span>
+            <span>Low (fewest rides)</span>
+          </div>
+        </div>
+        <p *ngIf="summary" class="summary-text">
+          Total rides: {{ summary.totalRides }} | Zones: {{ zones.length }}
+        </p>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Map -->
+    <ion-card class="map-card">
+      <ion-card-header>
+        <ion-card-title>Pickup Locations by Ride Count</ion-card-title>
+        <ion-card-subtitle>Click a circle for details</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <div id="heatmap-map" class="map-container"></div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

@@ -14,21 +14,49 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-card *ngIf="settings">
-    <ion-card-header>
-      <ion-card-title>System Settings</ion-card-title>
-    </ion-card-header>
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <ion-spinner></ion-spinner>
+    <p>Loading settings...</p>
+  </div>
+
+  <!-- Error State -->
+  <ion-card *ngIf="error && !isLoading" color="danger">
     <ion-card-content>
-      <ion-item>
-        <ion-label>Maintenance Mode</ion-label>
-        <ion-toggle [(ngModel)]="settings.systemSettings.maintenanceMode"></ion-toggle>
-      </ion-item>
-      <ion-item>
-        <ion-label>Force Update</ion-label>
-        <ion-toggle [(ngModel)]="settings.systemSettings.forceUpdate"></ion-toggle>
-      </ion-item>
+      <p>{{ error }}</p>
+      <ion-button fill="outline" (click)="loadSettings()">Retry</ion-button>
     </ion-card-content>
   </ion-card>
+
+  <!-- Settings Content -->
+  <div *ngIf="!isLoading && settings">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>System Settings</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label>
+            <h2>Maintenance Mode</h2>
+            <p>Prevent users from accessing the app</p>
+          </ion-label>
+          <ion-toggle 
+            [(ngModel)]="settings.systemSettings.maintenanceMode"
+            (ionChange)="toggleMaintenanceMode()">
+          </ion-toggle>
+        </ion-item>
+        <ion-item>
+          <ion-label>
+            <h2>Force Update</h2>
+            <p>Force users to update the app</p>
+          </ion-label>
+          <ion-toggle 
+            [(ngModel)]="settings.systemSettings.forceUpdate"
+            (ionChange)="toggleForceUpdate()">
+          </ion-toggle>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
 
   <ion-card *ngIf="settings">
     <ion-card-header>
@@ -48,8 +76,9 @@
         <ion-input type="number" [(ngModel)]="settings.pricingConfigurations.minimumFare"></ion-input>
       </ion-item>
       <ion-item>
-        <ion-label position="stacked">Cancellation Fees</ion-label>
+        <ion-label position="stacked">Cancellation / rider penalty (₹)</ion-label>
         <ion-input type="number" [(ngModel)]="settings.pricingConfigurations.cancellationFees"></ion-input>
+        <ion-note slot="helper">Used for rider cancellation fees and the rider penalty when the driver cancels during an active trip.</ion-note>
       </ion-item>
       <ion-item>
         <ion-label position="stacked">Platform Fees (%)</ion-label>
@@ -62,7 +91,196 @@
     </ion-card-content>
   </ion-card>
 
-  <ion-button expand="block" (click)="saveSettings()" [disabled]="!settings">
-    Save Settings
-  </ion-button>
+  <!-- Vehicle Services Configuration -->
+  <ion-card *ngIf="settings">
+    <ion-card-header>
+      <ion-card-title>Vehicle Services Configuration</ion-card-title>
+      <ion-card-subtitle>Configure prices and availability for vehicle services</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <!-- Cerca Small -->
+      <div class="vehicle-service-section">
+        <ion-item>
+          <ion-label>
+            <h2>Cerca Small</h2>
+            <p>4 Seats</p>
+          </ion-label>
+          <ion-toggle 
+            [(ngModel)]="settings.vehicleServices.cercaSmall.enabled"
+            (ionChange)="onVehicleServiceToggle('cercaSmall')">
+          </ion-toggle>
+        </ion-item>
+        <ion-item *ngIf="settings.vehicleServices.cercaSmall.enabled">
+          <ion-label position="stacked">Service Name</ion-label>
+          <ion-input 
+            type="text" 
+            [(ngModel)]="settings.vehicleServices.cercaSmall.name"
+            placeholder="Cerca Small">
+          </ion-input>
+        </ion-item>
+        <ion-item *ngIf="settings.vehicleServices.cercaSmall.enabled">
+          <ion-label position="stacked">Price (₹)</ion-label>
+          <ion-input 
+            type="number" 
+            min="0"
+            [(ngModel)]="settings.vehicleServices.cercaSmall.price"
+            placeholder="299">
+          </ion-input>
+        </ion-item>
+        <ion-item *ngIf="settings.vehicleServices.cercaSmall.enabled">
+          <ion-label position="stacked">Per Minute Rate (₹)</ion-label>
+          <ion-input 
+            type="number" 
+            min="0"
+            step="0.01"
+            [(ngModel)]="settings.vehicleServices.cercaSmall.perMinuteRate"
+            placeholder="2">
+          </ion-input>
+        </ion-item>
+        <ion-item *ngIf="settings.vehicleServices.cercaSmall.enabled">
+          <ion-label position="stacked">Seats</ion-label>
+          <ion-input 
+            type="number" 
+            min="1"
+            [(ngModel)]="settings.vehicleServices.cercaSmall.seats"
+            placeholder="4">
+          </ion-input>
+        </ion-item>
+        <ion-item *ngIf="settings.vehicleServices.cercaSmall.enabled">
+          <ion-label position="stacked">Image Path</ion-label>
+          <ion-input 
+            type="text" 
+            [value]="settings.vehicleServices.cercaSmall.imagePath"
+            readonly>
+          </ion-input>
+        </ion-item>
+      </div>
+
+      <!-- Cerca Medium -->
+      <div class="vehicle-service-section">
+        <ion-item>
+          <ion-label>
+            <h2>Cerca Medium</h2>
+            <p>6 Seats</p>
+          </ion-label>
+          <ion-toggle 
+            [(ngModel)]="settings.vehicleServices.cercaMedium.enabled"
+            (ionChange)="onVehicleServiceToggle('cercaMedium')">
+          </ion-toggle>
+        </ion-item>
+        <ion-item *ngIf="settings.vehicleServices.cercaMedium.enabled">
+          <ion-label position="stacked">Service Name</ion-label>
+          <ion-input 
+            type="text" 
+            [(ngModel)]="settings.vehicleServices.cercaMedium.name"
+            placeholder="Cerca Medium">
+          </ion-input>
+        </ion-item>
+        <ion-item *ngIf="settings.vehicleServices.cercaMedium.enabled">
+          <ion-label position="stacked">Price (₹)</ion-label>
+          <ion-input 
+            type="number" 
+            min="0"
+            [(ngModel)]="settings.vehicleServices.cercaMedium.price"
+            placeholder="499">
+          </ion-input>
+        </ion-item>
+        <ion-item *ngIf="settings.vehicleServices.cercaMedium.enabled">
+          <ion-label position="stacked">Per Minute Rate (₹)</ion-label>
+          <ion-input 
+            type="number" 
+            min="0"
+            step="0.01"
+            [(ngModel)]="settings.vehicleServices.cercaMedium.perMinuteRate"
+            placeholder="3">
+          </ion-input>
+        </ion-item>
+        <ion-item *ngIf="settings.vehicleServices.cercaMedium.enabled">
+          <ion-label position="stacked">Seats</ion-label>
+          <ion-input 
+            type="number" 
+            min="1"
+            [(ngModel)]="settings.vehicleServices.cercaMedium.seats"
+            placeholder="6">
+          </ion-input>
+        </ion-item>
+        <ion-item *ngIf="settings.vehicleServices.cercaMedium.enabled">
+          <ion-label position="stacked">Image Path</ion-label>
+          <ion-input 
+            type="text" 
+            [value]="settings.vehicleServices.cercaMedium.imagePath"
+            readonly>
+          </ion-input>
+        </ion-item>
+      </div>
+
+      <!-- Cerca Large -->
+      <div class="vehicle-service-section">
+        <ion-item>
+          <ion-label>
+            <h2>Cerca Large</h2>
+            <p>8 Seats</p>
+          </ion-label>
+          <ion-toggle 
+            [(ngModel)]="settings.vehicleServices.cercaLarge.enabled"
+            (ionChange)="onVehicleServiceToggle('cercaLarge')">
+          </ion-toggle>
+        </ion-item>
+        <ion-item *ngIf="settings.vehicleServices.cercaLarge.enabled">
+          <ion-label position="stacked">Service Name</ion-label>
+          <ion-input 
+            type="text" 
+            [(ngModel)]="settings.vehicleServices.cercaLarge.name"
+            placeholder="Cerca Large">
+          </ion-input>
+        </ion-item>
+        <ion-item *ngIf="settings.vehicleServices.cercaLarge.enabled">
+          <ion-label position="stacked">Price (₹)</ion-label>
+          <ion-input 
+            type="number" 
+            min="0"
+            [(ngModel)]="settings.vehicleServices.cercaLarge.price"
+            placeholder="699">
+          </ion-input>
+        </ion-item>
+        <ion-item *ngIf="settings.vehicleServices.cercaLarge.enabled">
+          <ion-label position="stacked">Per Minute Rate (₹)</ion-label>
+          <ion-input 
+            type="number" 
+            min="0"
+            step="0.01"
+            [(ngModel)]="settings.vehicleServices.cercaLarge.perMinuteRate"
+            placeholder="4">
+          </ion-input>
+        </ion-item>
+        <ion-item *ngIf="settings.vehicleServices.cercaLarge.enabled">
+          <ion-label position="stacked">Seats</ion-label>
+          <ion-input 
+            type="number" 
+            min="1"
+            [(ngModel)]="settings.vehicleServices.cercaLarge.seats"
+            placeholder="8">
+          </ion-input>
+        </ion-item>
+        <ion-item *ngIf="settings.vehicleServices.cercaLarge.enabled">
+          <ion-label position="stacked">Image Path</ion-label>
+          <ion-input 
+            type="text" 
+            [value]="settings.vehicleServices.cercaLarge.imagePath"
+            readonly>
+          </ion-input>
+        </ion-item>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+    <ion-button 
+      expand="block" 
+      (click)="saveSettings()" 
+      [disabled]="!settings || isSaving">
+      <ion-spinner *ngIf="isSaving" name="crescent"></ion-spinner>
+      <span *ngIf="!isSaving">Save Settings</span>
+      <span *ngIf="isSaving">Saving...</span>
+    </ion-button>
+  </div>
 </ion-content>

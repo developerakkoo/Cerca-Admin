@@ -1,0 +1,68 @@
+.payouts-container {
+  padding: 16px;
+}
+
+ion-segment {
+  margin-bottom: 16px;
+}
+
+.filter-card,
+.summary-card,
+.table-card {
+  margin-bottom: 16px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.payouts-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.payouts-table th,
+.payouts-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+}
+
+.driver-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.loading-container,
+.empty-state {
+  text-align: center;
+  padding: 24px;
+}
+
+.empty-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.modal-content {
+  padding: 16px;
+}
+

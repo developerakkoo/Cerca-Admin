@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MenuController, AlertController } from '@ionic/angular';
 import { AdminAuthService } from '../services/admin-auth.service';
+import { AdminSocketService } from '../services/admin-socket.service';
 
 @Component({
   selector: 'app-login',
@@ -21,7 +22,8 @@ export class LoginPage implements OnInit {
     private router: Router,
     private menuController: MenuController,
     private alertController: AlertController,
-    private adminAuth: AdminAuthService
+    private adminAuth: AdminAuthService,
+    private socketService: AdminSocketService
   ) {
     this.loginForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
@@ -47,19 +49,22 @@ export class LoginPage implements OnInit {
 
     if (this.loginForm.valid) {
       const { email, password } = this.loginForm.value;
-
+      
       this.isLoading = true;
       this.adminAuth.login(email, password).subscribe({
-        next: async () => {
+        next: async (response) => {
+          this.isLoading = false;
           await this.menuController.enable(true);
-          this.router.navigate(['/folder/dashboard']);
-          this.isLoading = false;
+          // Initialize socket after successful login
+          this.socketService.initialize();
+          this.router.navigate(['/folder/dashboard'], { replaceUrl: true });
         },
-        error: async () => {
+        error: async (error) => {
           this.isLoading = false;
+          const errorMessage = error?.error?.message || 'Invalid email or password. Please try again.';
           const alert = await this.alertController.create({
             header: 'Login Failed',
-            message: 'Invalid email or password. Please try again.',
+            message: errorMessage,
             buttons: ['OK']
           });
           await alert.present();

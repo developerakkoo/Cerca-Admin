@@ -1,0 +1,307 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Promo Codes</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="openCreateForm()" *ngIf="!showForm">
+        <ion-icon name="add" slot="start"></ion-icon>
+        Create Promo Code
+      </ion-button>
+      <ion-button (click)="showForm = false" *ngIf="showForm">
+        <ion-icon name="close" slot="start"></ion-icon>
+        Cancel
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <!-- Create/Edit Form -->
+  <ion-card *ngIf="showForm" class="form-card">
+    <ion-card-header>
+      <ion-card-title>{{ editingPromo ? 'Edit' : 'Create' }} Promo Code</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="stacked">Coupon Code (leave empty to auto-generate)</ion-label>
+        <ion-input [(ngModel)]="promoForm.couponCode" [disabled]="!!editingPromo"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Type</ion-label>
+        <ion-select [(ngModel)]="promoForm.type">
+          <ion-select-option value="fixed">Fixed Discount</ion-select-option>
+          <ion-select-option value="percentage">Percentage Discount</ion-select-option>
+          <ion-select-option value="new_user">New User Discount</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Description *</ion-label>
+        <ion-input [(ngModel)]="promoForm.description" required></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Discount Value *</ion-label>
+        <ion-input type="number" [(ngModel)]="promoForm.discountValue" min="0" required></ion-input>
+      </ion-item>
+
+      <ion-item *ngIf="promoForm.type === 'percentage'">
+        <ion-label position="stacked">Max Discount Amount (optional)</ion-label>
+        <ion-input type="number" [(ngModel)]="promoForm.maxDiscountAmount" min="0"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Min Order Amount</ion-label>
+        <ion-input type="number" [(ngModel)]="promoForm.minOrderAmount" min="0"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Start Date *</ion-label>
+        <ion-input type="date" [(ngModel)]="promoForm.startDate" required></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Valid Until *</ion-label>
+        <ion-input type="date" [(ngModel)]="promoForm.validUntil" required></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Max Usage (leave empty for unlimited)</ion-label>
+        <ion-input type="number" [(ngModel)]="promoForm.maxUsage" min="1"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Max Usage Per User</ion-label>
+        <ion-input type="number" [(ngModel)]="promoForm.maxUsagePerUser" min="1"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Is Gift</ion-label>
+        <ion-toggle [(ngModel)]="promoForm.isGift"></ion-toggle>
+      </ion-item>
+
+      <div *ngIf="promoForm.isGift">
+        <ion-item>
+          <ion-label position="stacked">Gift Type</ion-label>
+          <ion-select [(ngModel)]="promoForm.giftType">
+            <ion-select-option value="MANUAL">Manual</ion-select-option>
+            <ion-select-option value="AUTO_NEW_USER">Auto - New User</ion-select-option>
+            <ion-select-option value="AUTO_FIRST_RIDE">Auto - First Ride</ion-select-option>
+            <ion-select-option value="AUTO_LOYALTY">Auto - Loyalty</ion-select-option>
+            <ion-select-option value="AUTO_BIRTHDAY">Auto - Birthday</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Gift Title</ion-label>
+          <ion-input [(ngModel)]="promoForm.giftTitle"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Gift Description</ion-label>
+          <ion-textarea [(ngModel)]="promoForm.giftDescription"></ion-textarea>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Gift Image Path</ion-label>
+          <ion-input [(ngModel)]="promoForm.giftImage"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Priority</ion-label>
+          <ion-input type="number" [(ngModel)]="promoForm.priority"></ion-input>
+        </ion-item>
+
+        <ion-item *ngIf="promoForm.giftType === 'AUTO_LOYALTY'">
+          <ion-label position="stacked">Min Ride Count</ion-label>
+          <ion-input type="number" [(ngModel)]="promoForm.autoAssignConditions.minRideCount" min="1"></ion-input>
+        </ion-item>
+      </div>
+
+      <ion-item>
+        <ion-label>Active</ion-label>
+        <ion-toggle [(ngModel)]="promoForm.isActive"></ion-toggle>
+      </ion-item>
+
+      <ion-button expand="block" (click)="savePromoCode()" [disabled]="isSaving">
+        {{ editingPromo ? 'Update' : 'Create' }} Promo Code
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Filters -->
+  <ion-card *ngIf="!showForm">
+    <ion-card-content>
+      <ion-item>
+        <ion-label>Filter by Type</ion-label>
+        <ion-select [(ngModel)]="filterType">
+          <ion-select-option value="all">All Types</ion-select-option>
+          <ion-select-option value="fixed">Fixed</ion-select-option>
+          <ion-select-option value="percentage">Percentage</ion-select-option>
+          <ion-select-option value="new_user">New User</ion-select-option>
+          <ion-select-option value="gift">Gifts</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Filter by Status</ion-label>
+        <ion-select [(ngModel)]="filterStatus">
+          <ion-select-option value="all">All Status</ion-select-option>
+          <ion-select-option value="active">Active</ion-select-option>
+          <ion-select-option value="inactive">Inactive</ion-select-option>
+          <ion-select-option value="expired">Expired</ion-select-option>
+        </ion-select>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Promo Codes Table -->
+  <div *ngIf="!showForm && !showUserSelection">
+    <ion-card>
+      <ion-card-content>
+        <div class="table-container">
+          <table class="promo-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Discount</th>
+                <th>Valid Until</th>
+                <th>Usage</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let promo of getFilteredPromoCodes()">
+                <td>
+                  <strong>{{ promo.couponCode }}</strong>
+                  <ion-badge color="primary" *ngIf="promo.isGift" style="margin-left: 4px; font-size: 10px;">Gift</ion-badge>
+                </td>
+                <td>{{ promo.type }}</td>
+                <td>
+                  <span class="description-text">{{ promo.description }}</span>
+                  <br>
+                  <small *ngIf="promo.isGift && promo.giftTitle">{{ promo.giftTitle }}</small>
+                </td>
+                <td>
+                  {{ promo.type === 'percentage' ? promo.discountValue + '%' : '₹' + promo.discountValue }}
+                  <br>
+                  <small *ngIf="promo.maxDiscountAmount">Max: ₹{{ promo.maxDiscountAmount }}</small>
+                </td>
+                <td>{{ promo.validUntil | date:'shortDate' }}</td>
+                <td>
+                  {{ promo.usageCount || 0 }}
+                  <span *ngIf="promo.maxUsage">/ {{ promo.maxUsage }}</span>
+                </td>
+                <td>
+                  <ion-badge [color]="promo.isActive ? 'success' : 'danger'">
+                    {{ promo.isActive ? 'Active' : 'Inactive' }}
+                  </ion-badge>
+                </td>
+                <td class="actions-cell">
+                  <ion-button fill="clear" size="small" (click)="openEditForm(promo)" title="Edit">
+                    <ion-icon name="create-outline"></ion-icon>
+                  </ion-button>
+                  <ion-button fill="clear" size="small" color="primary" *ngIf="promo.isGift" (click)="openSendGiftModal(promo)" title="Send Gift">
+                    <ion-icon name="send-outline"></ion-icon>
+                  </ion-button>
+                  <ion-button fill="clear" size="small" color="warning" (click)="toggleStatus(promo)" [title]="promo.isActive ? 'Deactivate' : 'Activate'">
+                    <ion-icon [name]="promo.isActive ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+                  </ion-button>
+                  <ion-button fill="clear" size="small" color="danger" (click)="deletePromoCode(promo)" title="Delete">
+                    <ion-icon name="trash-outline"></ion-icon>
+                  </ion-button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div *ngIf="!isLoading && getFilteredPromoCodes().length === 0" class="empty-state">
+            <p>No promo codes found.</p>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- User Selection Modal -->
+  <ion-modal [isOpen]="showUserSelection" (didDismiss)="cancelUserSelection()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Send Gift: {{ selectedGift?.couponCode }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cancelUserSelection()">
+              <ion-icon name="close"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Select Users</ion-card-title>
+            <ion-card-subtitle>Select users to send this gift to</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-item>
+              <ion-label position="stacked">Search Users</ion-label>
+              <ion-input 
+                [(ngModel)]="userSearchTerm" 
+                (ionInput)="onUserSearchChange()"
+                placeholder="Search by name, email, or phone">
+              </ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label>
+                <strong>Selected: {{ selectedUserIds.length }} user(s)</strong>
+              </ion-label>
+              <ion-button 
+                fill="outline" 
+                size="small" 
+                (click)="selectedUserIds = []"
+                [disabled]="selectedUserIds.length === 0">
+                Clear Selection
+              </ion-button>
+            </ion-item>
+
+            <ion-list>
+              <ion-item *ngFor="let user of users">
+                <ion-checkbox 
+                  [checked]="isUserSelected(user._id || user.id)"
+                  (ionChange)="toggleUserSelection(user._id || user.id)">
+                </ion-checkbox>
+                <ion-label>
+                  <h2>{{ user.fullName || user.name }}</h2>
+                  <p>{{ user.email }}</p>
+                  <p *ngIf="user.phoneNumber">{{ user.phoneNumber }}</p>
+                </ion-label>
+              </ion-item>
+            </ion-list>
+
+            <div *ngIf="!isLoadingUsers && users.length === 0" class="empty-state">
+              <p>No users found.</p>
+            </div>
+
+            <ion-loading [isOpen]="isLoadingUsers" message="Loading users..."></ion-loading>
+          </ion-card-content>
+        </ion-card>
+
+        <ion-button 
+          expand="block" 
+          (click)="sendGiftsToSelectedUsers()"
+          [disabled]="selectedUserIds.length === 0"
+          style="margin: 16px;">
+          <ion-icon name="send-outline" slot="start"></ion-icon>
+          Send Gift to {{ selectedUserIds.length }} User(s)
+        </ion-button>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-loading [isOpen]="isLoading" message="Loading promo codes..."></ion-loading>
+</ion-content>
+

@@ -1,0 +1,159 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Driver Earnings</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="outline" (click)="exportCsv()">Export CSV</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense" class="ion-no-border">
+    <ion-toolbar>
+      <ion-title size="large">Driver Earnings</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <div class="earnings-container">
+    <ion-card class="filter-card">
+      <ion-card-content>
+        <div class="filter-row">
+          <ion-input
+            label="Driver ID"
+            labelPlacement="stacked"
+            placeholder="Filter by driver ID"
+            [(ngModel)]="driverId"
+            (ionChange)="onFilterChange()">
+          </ion-input>
+          <ion-select
+            label="Status"
+            labelPlacement="stacked"
+            [(ngModel)]="status"
+            (ionChange)="onFilterChange()">
+            <ion-select-option value="">All</ion-select-option>
+            <ion-select-option value="pending">Pending</ion-select-option>
+            <ion-select-option value="completed">Completed</ion-select-option>
+            <ion-select-option value="failed">Failed</ion-select-option>
+            <ion-select-option value="refunded">Refunded</ion-select-option>
+          </ion-select>
+        </div>
+        <div class="filter-row">
+          <ion-input
+            type="date"
+            label="Start Date"
+            labelPlacement="stacked"
+            [(ngModel)]="startDate"
+            (ionChange)="onFilterChange()">
+          </ion-input>
+          <ion-input
+            type="date"
+            label="End Date"
+            labelPlacement="stacked"
+            [(ngModel)]="endDate"
+            (ionChange)="onFilterChange()">
+          </ion-input>
+          <ion-button fill="clear" (click)="resetFilters()">Reset</ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="stats" class="summary-card">
+      <ion-card-header>
+        <ion-card-title>Earnings Summary</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <p>Total Gross</p>
+            <h3>{{ formatCurrency(stats?.summary?.totalGrossEarnings || 0) }}</h3>
+          </div>
+          <div class="summary-item">
+            <p>Platform Fees</p>
+            <h3>{{ formatCurrency(stats?.summary?.totalPlatformFees || 0) }}</h3>
+          </div>
+          <div class="summary-item">
+            <p>Driver Earnings</p>
+            <h3>{{ formatCurrency(stats?.summary?.totalDriverEarnings || 0) }}</h3>
+          </div>
+          <div class="summary-item">
+            <p>Pending Amount</p>
+            <h3>{{ formatCurrency(stats?.statusBreakdown?.pending?.amount || 0) }}</h3>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <div *ngIf="isLoading" class="loading-container">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Loading earnings...</p>
+    </div>
+
+    <ion-card *ngIf="error && !isLoading" color="danger" class="error-card">
+      <ion-card-content>
+        <p>{{ error }}</p>
+        <ion-button fill="outline" (click)="loadEarnings(currentPage)">Retry</ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="!isLoading && !error" class="table-card">
+      <ion-card-content>
+        <div class="table-wrapper">
+          <table class="earnings-table">
+            <thead>
+              <tr>
+                <th>Driver</th>
+                <th>Ride</th>
+                <th>Date</th>
+                <th>Gross</th>
+                <th>Platform Fee</th>
+                <th>Driver</th>
+                <th>Status</th>
+                <th class="actions-header">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let earning of earnings">
+                <td>
+                  <div class="driver-cell">
+                    <span>{{ earning.driver?.name || 'Unknown' }}</span>
+                    <small>{{ earning.driver?.phone || '' }}</small>
+                  </div>
+                </td>
+                <td>{{ earning.rideId || 'N/A' }}</td>
+                <td>{{ formatDate(earning.rideDate) }}</td>
+                <td>{{ formatCurrency(earning.grossFare || 0) }}</td>
+                <td>{{ formatCurrency(earning.platformFee || 0) }}</td>
+                <td>{{ formatCurrency(earning.driverEarning || 0) }}</td>
+                <td>
+                  <ion-select [(ngModel)]="statusSelections[earning.id]" interface="popover">
+                    <ion-select-option value="pending">Pending</ion-select-option>
+                    <ion-select-option value="completed">Completed</ion-select-option>
+                    <ion-select-option value="failed">Failed</ion-select-option>
+                    <ion-select-option value="refunded">Refunded</ion-select-option>
+                  </ion-select>
+                </td>
+                <td class="actions-cell">
+                  <ion-button fill="clear" size="small" (click)="updateStatus(earning)">
+                    <ion-icon name="save-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-button fill="clear" size="small" (click)="viewDriverEarnings(earning.driver?.id)">
+                    <ion-icon name="open-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div *ngIf="earnings.length === 0" class="empty-state">
+          <ion-icon name="cash-outline" class="empty-icon"></ion-icon>
+          <p>No earnings found</p>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
+

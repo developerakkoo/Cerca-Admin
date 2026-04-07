@@ -1,0 +1,456 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/folder/drivers" text="Drivers"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ driver?.name || 'Driver profile' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="driver-detail-content">
+  <div class="page-inner" *ngIf="!isLoading && !error && driver">
+    <!-- Hero -->
+    <section class="hero-panel section-block">
+      <div class="hero-layout">
+        <div class="hero-identity">
+          <div class="hero-avatar" aria-hidden="true">
+            <ion-icon name="person"></ion-icon>
+          </div>
+          <div>
+            <h1 class="hero-name">{{ driver.name }}</h1>
+            <div class="hero-contact">
+              <a *ngIf="driver.phone" [href]="'tel:' + driver.phone" class="contact-link">{{ driver.phone }}</a>
+              <span *ngIf="driver.phone && driver.email" class="contact-sep">·</span>
+              <a *ngIf="driver.email" [href]="'mailto:' + driver.email" class="contact-link">{{ driver.email }}</a>
+            </div>
+          </div>
+        </div>
+        <div class="hero-kpis">
+          <div class="kpi-chip" *ngIf="driver.rating != null">
+            <span class="kpi-value">{{ driver.rating | number:'1.1-2' }}</span>
+            <span class="kpi-label">Rating</span>
+            <span class="kpi-meta" *ngIf="driver.totalRatings != null">({{ driver.totalRatings }} reviews)</span>
+          </div>
+          <div class="kpi-chip" *ngIf="driver.earningsSummary?.totalRides != null">
+            <span class="kpi-value">{{ driver.earningsSummary.totalRides }}</span>
+            <span class="kpi-label">Recorded rides</span>
+          </div>
+          <div class="kpi-chip" *ngIf="driver.earningsSummary?.totalDriverEarnings != null">
+            <span class="kpi-value">{{ inr(driver.earningsSummary.totalDriverEarnings) }}</span>
+            <span class="kpi-label">Driver earnings (ledger)</span>
+          </div>
+        </div>
+      </div>
+      <div class="status-chips">
+        <ion-badge *ngIf="driver.approvalStatus" [color]="approvalColor(driver.approvalStatus)">
+          {{ approvalLabel(driver.approvalStatus) }}
+        </ion-badge>
+        <ion-badge *ngIf="!driver.approvalStatus" [color]="driver.isVerified ? 'success' : 'warning'">
+          {{ driver.isVerified ? 'Verified' : 'Not verified' }}
+        </ion-badge>
+        <ion-badge [color]="driver.isActive ? 'success' : 'medium'">
+          {{ driver.isActive ? 'Account active' : 'Account inactive' }}
+        </ion-badge>
+        <ion-badge *ngIf="driver.vehicleStatus" [color]="vStatusColor(driver.vehicleStatus)">
+          Vehicle: {{ vStatusLabel(driver.vehicleStatus) }}
+        </ion-badge>
+      </div>
+      <div class="missing-docs" *ngIf="driver.missingDocuments?.length">
+        <span class="missing-docs-label">Missing for approval:</span>
+        <ion-badge color="warning" class="ion-margin-start" *ngFor="let m of driver.missingDocuments">{{ missDocLabel(m) }}</ion-badge>
+      </div>
+    </section>
+
+    <!-- Account & onboarding -->
+    <section class="section-block panel-card" *ngIf="driver.approvalWorkflow">
+      <h2 class="section-title">Account &amp; onboarding</h2>
+      <p class="section-desc">Review timeline and routing for this driver application.</p>
+      <dl class="detail-dl">
+        <div class="detail-row" *ngIf="driver.approvalWorkflow.submittedAt">
+          <dt>Submitted</dt>
+          <dd>{{ driver.approvalWorkflow.submittedAt | date:'medium' }}</dd>
+        </div>
+        <div class="detail-row" *ngIf="driver.approvalWorkflow.vendorApprovedAt">
+          <dt>Vendor approved</dt>
+          <dd>{{ driver.approvalWorkflow.vendorApprovedAt | date:'medium' }}</dd>
+        </div>
+        <div class="detail-row" *ngIf="driver.approvalWorkflow.adminApprovedAt">
+          <dt>Platform approved</dt>
+          <dd>{{ driver.approvalWorkflow.adminApprovedAt | date:'medium' }}</dd>
+        </div>
+        <div class="detail-row" *ngIf="driver.approvalWorkflow.rejectedAt">
+          <dt>Rejected</dt>
+          <dd>{{ driver.approvalWorkflow.rejectedAt | date:'medium' }} · {{ wfRejectedByLabel(driver.approvalWorkflow.rejectedBy) }}</dd>
+        </div>
+        <div class="detail-row" *ngIf="driver.approvalWorkflow.rejectionReason">
+          <dt>Rejection reason</dt>
+          <dd class="wrap">{{ driver.approvalWorkflow.rejectionReason }}</dd>
+        </div>
+        <div class="detail-row" *ngIf="driver.approvalWorkflow.routedTo">
+          <dt>Queue</dt>
+          <dd>{{ wfRoutedLabel(driver.approvalWorkflow.routedTo) }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- Vendor -->
+    <section class="section-block panel-card">
+      <h2 class="section-title">Vendor association</h2>
+      <ng-container *ngIf="vendorRecord as v">
+        <dl class="detail-dl">
+          <div class="detail-row">
+            <dt>Business</dt>
+            <dd>{{ v['businessName'] }}</dd>
+          </div>
+          <div class="detail-row" *ngIf="v['ownerName']">
+            <dt>Owner</dt>
+            <dd>{{ v['ownerName'] }}</dd>
+          </div>
+          <div class="detail-row" *ngIf="v['phone']">
+            <dt>Vendor phone</dt>
+            <dd><a [href]="'tel:' + v['phone']" class="contact-link">{{ v['phone'] }}</a></dd>
+          </div>
+          <div class="detail-row" *ngIf="v['email']">
+            <dt>Vendor email</dt>
+            <dd><a [href]="'mailto:' + v['email']" class="contact-link">{{ v['email'] }}</a></dd>
+          </div>
+          <div class="detail-row" *ngIf="v['address']" class="wrap-row">
+            <dt>Address</dt>
+            <dd class="wrap">{{ v['address'] }}</dd>
+          </div>
+        </dl>
+      </ng-container>
+      <p *ngIf="hasVendorLink && !vendorRecord" class="muted">This driver is linked to a vendor account. Full vendor profile was not loaded.</p>
+      <p *ngIf="!hasVendorLink" class="muted">Independent driver — not tied to a vendor organisation.</p>
+    </section>
+
+    <!-- Approved vehicle -->
+    <section class="section-block panel-card" *ngIf="driver.vehicleInfo || driver.assignedFleetVehicleId">
+      <h2 class="section-title">Active vehicle (legacy / fleet)</h2>
+      <dl class="detail-dl" *ngIf="driver.vehicleInfo as vi">
+        <div class="detail-row">
+          <dt>Vehicle</dt>
+          <dd>{{ vi.make }} {{ vi.model }}<span *ngIf="vi.year"> · {{ vi.year }}</span></dd>
+        </div>
+        <div class="detail-row" *ngIf="vi.licensePlate">
+          <dt>Registration</dt>
+          <dd>{{ vi.licensePlate }}</dd>
+        </div>
+        <div class="detail-row" *ngIf="vi.color">
+          <dt>Colour</dt>
+          <dd>{{ vi.color }}</dd>
+        </div>
+      </dl>
+      <p *ngIf="driver.assignedFleetVehicleId && !driver.vehicleInfo" class="muted">Fleet-assigned vehicle is on file; expand fleet tools for full vehicle record.</p>
+    </section>
+
+    <!-- Garage -->
+    <section class="section-block panel-card" *ngIf="driver.vehicles?.length">
+      <h2 class="section-title">Registered vehicles (garage)</h2>
+      <p class="section-desc">Self-owned vehicles submitted by the driver.</p>
+      <div class="garage-list">
+        <div class="garage-row" *ngFor="let gv of driver.vehicles">
+          <div class="garage-row-main">
+            <span class="garage-plate">{{ gv.licensePlate || '—' }}</span>
+            <span class="garage-meta">{{ gv.make }} {{ gv.model }}<span *ngIf="gv.year"> · {{ gv.year }}</span></span>
+          </div>
+          <div class="garage-row-badges">
+            <ion-badge [color]="vStatusColor(gv.approvalStatus)">{{ garageVStatusLabel(gv.approvalStatus) }}</ion-badge>
+            <ion-badge [color]="gv.isActive ? 'success' : 'medium'">{{ gv.isActive ? 'Active' : 'Inactive' }}</ion-badge>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pending vehicle submission -->
+    <section class="section-block panel-card" *ngIf="driver.pendingVehicleInfo">
+      <h2 class="section-title">Vehicle submission</h2>
+      <p class="section-desc" *ngIf="driver.pendingVehicleInfo.approvalStatus">
+        <ion-badge [color]="vStatusColor(driver.pendingVehicleInfo.approvalStatus)">{{ vStatusLabel(driver.pendingVehicleInfo.approvalStatus) }}</ion-badge>
+        <span *ngIf="driver.pendingVehicleInfo.approvalRoutedTo" class="ion-margin-start">· {{ wfRoutedLabel(driver.pendingVehicleInfo.approvalRoutedTo) }}</span>
+      </p>
+      <dl class="detail-dl">
+        <div class="detail-row" *ngIf="driver.pendingVehicleInfo.make || driver.pendingVehicleInfo.model">
+          <dt>Vehicle</dt>
+          <dd>{{ driver.pendingVehicleInfo.make }} {{ driver.pendingVehicleInfo.model }}<span *ngIf="driver.pendingVehicleInfo.year"> ({{ driver.pendingVehicleInfo.year }})</span></dd>
+        </div>
+        <div class="detail-row" *ngIf="driver.pendingVehicleInfo.licensePlate">
+          <dt>Plate</dt>
+          <dd>{{ driver.pendingVehicleInfo.licensePlate }}</dd>
+        </div>
+        <div class="detail-row" *ngIf="driver.pendingVehicleInfo.rejectionReason">
+          <dt>Rejection reason</dt>
+          <dd class="wrap">{{ driver.pendingVehicleInfo.rejectionReason }}</dd>
+        </div>
+      </dl>
+      <ion-note *ngIf="vehiclePendingRoutedToVendor" class="ion-margin-bottom block-note">Awaiting vendor review first. The vendor forwards to admin after their check.</ion-note>
+      <ion-note *ngIf="vehicleVendorForwardedToAdmin" class="ion-margin-bottom block-note">Vendor pre-approved. Use Approve or Reject below for the final decision.</ion-note>
+      <ion-note *ngIf="driver.pendingVehicleInfo?.allowDocumentResubmit && driver.pendingVehicleInfo?.approvalStatus === 'REJECTED'" class="ion-margin-bottom block-note">Driver may re-upload vehicle documents when allowed.</ion-note>
+
+      <div class="identity-doc-grid ion-margin-top" *ngIf="driver.pendingVehicleInfo.documents?.length">
+        <div class="identity-doc-card" *ngFor="let d of driver.pendingVehicleInfo.documents">
+          <div class="identity-doc-thumb placeholder" *ngIf="!imageUrl(d.documentUrl)">
+            <ion-icon name="document-text-outline"></ion-icon>
+          </div>
+          <div class="identity-doc-thumb" *ngIf="imageUrl(d.documentUrl)">
+            <img [src]="assetUrl(d.documentUrl)" alt="" />
+          </div>
+          <div class="identity-doc-body">
+            <h3 class="identity-doc-title">{{ vDocTypeLabel(d.documentType) }}</h3>
+            <ion-button size="small" fill="outline" class="view-btn" (click)="openVehicleDocumentUrl(d.documentUrl)" [disabled]="!d.documentUrl">
+              View
+            </ion-button>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-row" *ngIf="canAdminActOnVehicle">
+        <ion-button color="success" size="default" (click)="approveDriverVehicle()">Approve vehicle</ion-button>
+        <ion-button fill="outline" color="medium" (click)="openVehicleRejectModal()">Reject vehicle</ion-button>
+      </div>
+    </section>
+
+    <!-- Compliance -->
+    <section class="section-block panel-card" id="compliance-section">
+      <h2 class="section-title">Compliance (ID numbers)</h2>
+      <p class="section-desc">Aadhaar, driving licence, and PAN on file.</p>
+      <div class="compliance-grid" [formGroup]="complianceForm">
+        <ion-item lines="full" class="compliance-field">
+          <ion-label position="stacked">Aadhaar number</ion-label>
+          <ion-input formControlName="aadhaarNumber" inputmode="numeric"></ion-input>
+        </ion-item>
+        <ion-item lines="full" class="compliance-field">
+          <ion-label position="stacked">Aadhaar expiry (optional)</ion-label>
+          <ion-input formControlName="aadhaarExpiry" type="date"></ion-input>
+        </ion-item>
+        <ion-item lines="full" class="compliance-field">
+          <ion-label position="stacked">Driving licence number</ion-label>
+          <ion-input formControlName="dlNumber"></ion-input>
+        </ion-item>
+        <ion-item lines="full" class="compliance-field">
+          <ion-label position="stacked">DL expiry (optional)</ion-label>
+          <ion-input formControlName="dlExpiry" type="date"></ion-input>
+        </ion-item>
+        <ion-item lines="full" class="compliance-field">
+          <ion-label position="stacked">PAN</ion-label>
+          <ion-input formControlName="panNumber"></ion-input>
+        </ion-item>
+        <ion-item lines="full" class="compliance-field">
+          <ion-label position="stacked">PAN expiry (optional)</ion-label>
+          <ion-input formControlName="panExpiry" type="date"></ion-input>
+        </ion-item>
+        <div class="compliance-actions">
+          <ion-button color="primary" (click)="saveCompliance()" [disabled]="savingCompliance || complianceForm.invalid">
+            {{ savingCompliance ? 'Saving…' : 'Save compliance' }}
+          </ion-button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Identity photos -->
+    <section class="section-block panel-card">
+      <h2 class="section-title">Identity documents (files)</h2>
+      <p class="section-desc">Photos uploaded by the driver for verification.</p>
+      <p *ngIf="documents.length === 0" class="muted">No documents uploaded.</p>
+      <div class="identity-doc-grid" *ngIf="documents.length > 0">
+        <div class="identity-doc-card" *ngFor="let doc of documents">
+          <div class="identity-doc-thumb placeholder" *ngIf="!identityPreviewUrl(doc)">
+            <ion-icon name="image-outline"></ion-icon>
+          </div>
+          <div class="identity-doc-thumb" *ngIf="identityPreviewUrl(doc) as src">
+            <img [src]="src" [alt]="docRowLabel(doc)" />
+          </div>
+          <div class="identity-doc-body">
+            <h3 class="identity-doc-title">{{ docRowLabel(doc) }}</h3>
+            <ion-button size="small" fill="outline" class="view-btn" (click)="openDocument(doc)" [disabled]="!documentHref(doc)">
+              View
+            </ion-button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Go-To -->
+    <section class="section-block panel-card">
+      <h2 class="section-title">Go-To route</h2>
+      <ng-container *ngIf="driver.goTo as g">
+        <p class="section-desc">
+          <ion-badge [color]="goToStatusColor(g)">{{ g.status }}</ion-badge>
+          <span *ngIf="g.isEnabled !== undefined" class="ion-margin-start">{{ g.isEnabled ? 'Enabled' : 'Disabled' }}</span>
+        </p>
+        <dl class="detail-dl">
+          <div class="detail-row" *ngIf="g.homeAddress">
+            <dt>Home address</dt>
+            <dd class="wrap">{{ g.homeAddress }}</dd>
+          </div>
+          <div class="detail-row" *ngIf="g.corridorRadiusMeters != null">
+            <dt>Corridor radius</dt>
+            <dd>{{ g.corridorRadiusMeters }} m</dd>
+          </div>
+          <div class="detail-row" *ngIf="goToRoutePointCount(g) > 0">
+            <dt>Route points</dt>
+            <dd>{{ goToRoutePointCount(g) }}</dd>
+          </div>
+          <div class="detail-row" *ngIf="g.routeDistanceMeters != null">
+            <dt>Route distance</dt>
+            <dd>{{ (g.routeDistanceMeters / 1000) | number:'1.1-1' }} km</dd>
+          </div>
+          <div class="detail-row" *ngIf="g.routeDurationSeconds != null">
+            <dt>ETA (snapshot)</dt>
+            <dd>{{ formatGoToDuration(g.routeDurationSeconds) }}</dd>
+          </div>
+          <div class="detail-row" *ngIf="g.activatedAt">
+            <dt>Activated</dt>
+            <dd>{{ g.activatedAt | date:'medium' }}</dd>
+          </div>
+          <div class="detail-row" *ngIf="g.lastRouteRefreshAt">
+            <dt>Route refreshed</dt>
+            <dd>{{ g.lastRouteRefreshAt | date:'medium' }}</dd>
+          </div>
+          <div class="detail-row" *ngIf="g.status === 'STALE' && g.staleReason">
+            <dt>Stale reason</dt>
+            <dd class="wrap">{{ g.staleReason }}</dd>
+          </div>
+        </dl>
+        <p *ngIf="!showGoToMap()" class="muted ion-margin-top">No route polyline or home location to plot.</p>
+        <div *ngIf="showGoToMap()" id="driver-goto-map" class="map-container ion-margin-top"></div>
+      </ng-container>
+      <p *ngIf="!driver.goTo" class="muted">No Go-To configuration on file.</p>
+    </section>
+
+    <!-- Priority -->
+    <section class="section-block panel-card">
+      <h2 class="section-title">Priority driver</h2>
+      <p>
+        <strong>Status:</strong>
+        <span *ngIf="driver.isPriorityDriver" class="status-verified">Approved</span>
+        <span *ngIf="driver.isPriorityDriver && driver.priorityApprovedAt"> ({{ driver.priorityApprovedAt | date:'shortDate' }})</span>
+        <span *ngIf="driver.priorityDocument && !driver.isPriorityDriver" class="status-unverified">Pending approval</span>
+        <span *ngIf="!driver.priorityDocument && !driver.isPriorityDriver">Not applied</span>
+      </p>
+      <div class="action-row">
+        <ion-button *ngIf="driver.priorityDocument" fill="outline" size="small" (click)="openPriorityDocument()">View IT identification</ion-button>
+        <ng-container *ngIf="driver.priorityDocument && !driver.isPriorityDriver">
+          <ion-button color="success" size="small" (click)="approvePriorityDriver()">Approve priority</ion-button>
+          <ion-button fill="outline" color="medium" size="small" (click)="rejectPriorityDriver()">Reject priority</ion-button>
+        </ng-container>
+      </div>
+    </section>
+
+    <!-- Platform approval -->
+    <section class="section-block panel-card highlight-actions" *ngIf="canAdminFinalApproveOrReject(driver)">
+      <h2 class="section-title">Final platform approval</h2>
+      <p class="section-desc" *ngIf="driver.approvalStatus === 'PENDING_ADMIN'">Vendor has approved — complete your review here.</p>
+      <div class="action-row">
+        <ion-button color="success" (click)="approveDriver()">Approve driver</ion-button>
+        <ion-button fill="outline" color="medium" (click)="rejectDriver()">Reject</ion-button>
+      </div>
+    </section>
+
+    <!-- Advanced -->
+    <section class="section-block panel-card" *ngIf="driver.isVerified || driver.approvalStatus === 'APPROVED'">
+      <h2 class="section-title">Advanced</h2>
+      <p class="muted wrap">Reset verification returns the driver to pending approval (per backend rules).</p>
+      <div class="action-row">
+        <ion-button fill="outline" color="warning" (click)="confirmResetVerification()">Reset to pending approval</ion-button>
+      </div>
+    </section>
+
+    <!-- Recent rides -->
+    <section class="section-block panel-card" *ngIf="rides.length">
+      <h2 class="section-title">Recent rides</h2>
+      <p class="section-desc">Latest trips linked to this driver.</p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Customer</th>
+              <th>Status</th>
+              <th>Fare</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of rides">
+              <td>{{ r.createdAt | date:'short' }}</td>
+              <td>{{ rideRiderLine(r.rider) }}</td>
+              <td><ion-badge color="medium">{{ rideStatLabel(r.status) }}</ion-badge></td>
+              <td>{{ r.fare != null ? inr(r.fare) : '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Recent payouts -->
+    <section class="section-block panel-card" *ngIf="payouts.length">
+      <h2 class="section-title">Recent payouts</h2>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Requested</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of payouts">
+              <td>{{ p.requestedAt | date:'medium' }}</td>
+              <td>{{ inr(p.amount) }}</td>
+              <td><ion-badge [color]="payStatusColor(p.status)">{{ payStatusLabel(p.status) }}</ion-badge></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="section-block footer-actions">
+      <ion-button fill="outline" expand="block" (click)="viewEarnings()">View full earnings</ion-button>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <ion-spinner></ion-spinner>
+    <p>Loading driver…</p>
+  </div>
+
+  <div class="page-inner" *ngIf="error && !isLoading">
+    <ion-card color="danger">
+      <ion-card-content>
+        <p>{{ error }}</p>
+        <ion-button fill="outline" (click)="goBack()">Back to drivers</ion-button>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <ion-modal [isOpen]="vehicleRejectModalOpen" (didDismiss)="closeVehicleRejectModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Reject vehicle</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeVehicleRejectModal()">Cancel</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <p class="muted wrap">Reason is shown to the driver. Optionally allow new vehicle documents.</p>
+        <ion-item lines="none">
+          <ion-label position="stacked">Rejection reason <ion-text color="danger">*</ion-text> (min. 10 characters)</ion-label>
+          <ion-textarea
+            [(ngModel)]="vehicleRejectReason"
+            rows="5"
+            placeholder="Explain what needs to change"
+            autoGrow="true"
+          ></ion-textarea>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-checkbox [(ngModel)]="vehicleRejectAllowResubmit" slot="start"></ion-checkbox>
+          <ion-label class="ion-text-wrap">Allow driver to re-upload vehicle documents</ion-label>
+        </ion-item>
+        <ion-button expand="block" color="danger" (click)="confirmVehicleReject()">Reject vehicle</ion-button>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

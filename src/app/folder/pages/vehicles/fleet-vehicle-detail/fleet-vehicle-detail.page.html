@@ -1,0 +1,115 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/folder/vehicles"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Fleet vehicle</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding" *ngIf="!isLoading && v">
+  <ion-badge [color]="badgeColor(str('approvalStatus'))">{{ str('approvalStatus') }}</ion-badge>
+
+  <ion-card class="ion-margin-top">
+    <ion-card-header>
+      <ion-card-title>{{ str('licensePlate') || '—' }}</ion-card-title>
+      <ion-card-subtitle>
+        {{ str('make') }} {{ str('model') }}
+        <span *ngIf="str('year')"> · {{ str('year') }}</span>
+        <span *ngIf="str('color')"> · {{ str('color') }}</span>
+      </ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <p *ngIf="str('vehicleType')"><strong>Type:</strong> {{ str('vehicleType') }}</p>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="vendor as ven">
+    <ion-card-header>
+      <ion-card-title>Vendor</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p *ngIf="ven.businessName"><strong>{{ ven.businessName }}</strong></p>
+      <p *ngIf="ven.ownerName">{{ ven.ownerName }}</p>
+      <p *ngIf="ven.email">{{ ven.email }}</p>
+      <p *ngIf="ven.phone">{{ ven.phone }}</p>
+      <ion-button *ngIf="vendorId()" size="small" fill="outline" (click)="openVendor()">Open vendor</ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="assignedDriver as ad">
+    <ion-card-header>
+      <ion-card-title>Assigned driver</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p *ngIf="ad.name">{{ ad.name }}</p>
+      <p *ngIf="ad.phone">{{ ad.phone }}</p>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="str('approvalStatus') === 'REJECTED'" color="danger" class="reject-banner">
+    <ion-card-header>
+      <ion-card-title>Rejected</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p>{{ str('rejectionReason') || 'No reason recorded.' }}</p>
+      <p *ngIf="v['allowDocumentResubmit']" class="ion-margin-top">
+        Vendor may resubmit documents when allowed.
+      </p>
+    </ion-card-content>
+  </ion-card>
+
+  <h3 class="ion-padding-start">Documents</h3>
+  <ion-list class="doc-list" lines="none">
+    <ion-item *ngFor="let d of docs()" button (click)="openDocument(d.documentUrl)" [disabled]="!d.documentUrl">
+      <ion-icon name="document-outline" slot="start"></ion-icon>
+      <ion-label>{{ d.documentType || 'Document' }}</ion-label>
+      <ion-icon name="open-outline" slot="end"></ion-icon>
+    </ion-item>
+    <ion-item *ngIf="docs().length === 0">
+      <ion-label>No documents listed.</ion-label>
+    </ion-item>
+  </ion-list>
+
+  <div class="actions-block" *ngIf="str('approvalStatus') === 'UNDER_APPROVAL'">
+    <ion-button expand="block" color="success" (click)="approve()">Approve</ion-button>
+    <ion-button expand="block" fill="outline" color="medium" (click)="openRejectModal()">Reject</ion-button>
+  </div>
+</ion-content>
+
+<div *ngIf="isLoading" class="ion-padding ion-text-center">
+  <ion-spinner></ion-spinner>
+  <p>Loading…</p>
+</div>
+
+<ion-card *ngIf="error && !isLoading" color="danger" class="ion-margin">
+  <ion-card-content>
+    <p>{{ error }}</p>
+    <ion-button fill="outline" (click)="load()">Retry</ion-button>
+  </ion-card-content>
+</ion-card>
+
+<ion-modal [isOpen]="rejectModalOpen" (didDismiss)="closeRejectModal()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Reject vehicle</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeRejectModal()">Close</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <p>Reason is shown to the vendor. Optionally allow resubmission of documents.</p>
+      <ion-item lines="none">
+        <ion-label position="stacked">Reason</ion-label>
+        <ion-textarea [(ngModel)]="rejectReason" rows="4" placeholder="Minimum 10 characters"></ion-textarea>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-checkbox [(ngModel)]="rejectAllowResubmit" slot="start"></ion-checkbox>
+        <ion-label class="ion-text-wrap">Allow vendor to re-upload documents</ion-label>
+      </ion-item>
+      <ion-button expand="block" color="danger" (click)="confirmReject()">Reject vehicle</ion-button>
+    </ion-content>
+  </ng-template>
+</ion-modal>

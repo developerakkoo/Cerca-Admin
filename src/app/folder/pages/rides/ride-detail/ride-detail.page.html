@@ -1,0 +1,100 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/folder/rides"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Ride Detail</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div *ngIf="isLoading" class="loading-container">
+    <ion-spinner></ion-spinner>
+    <p>Loading ride...</p>
+  </div>
+
+  <ion-card *ngIf="error && !isLoading" color="danger">
+    <ion-card-content>
+      <p>{{ error }}</p>
+      <ion-button fill="outline" (click)="loadRide()">Retry</ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <ng-container *ngIf="ride && !isLoading">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>{{ ride._id }}</ion-card-title>
+        <ion-card-subtitle>
+          Status: <span [class]="'status-' + (ride.status || '')">{{ ride.status || '—' }}</span>
+          · {{ ride.createdAt | date:'medium' }}
+        </ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <p><strong>Rider:</strong> {{ riderName() }}</p>
+        <p><strong>Driver:</strong> {{ driverName() }}</p>
+        <p><strong>Pickup:</strong> {{ ride.pickupAddress || '—' }}</p>
+        <p><strong>Dropoff:</strong> {{ ride.dropoffAddress || '—' }}</p>
+        <p *ngIf="ride.fare != null"><strong>Fare:</strong> {{ ride.fare | currency:'INR':'symbol':'1.2-2' }}</p>
+        <p *ngIf="ride.paymentStatus"><strong>Payment:</strong> {{ ride.paymentStatus }}</p>
+        <p *ngIf="ride.distanceInKm != null"><strong>Distance:</strong> {{ ride.distanceInKm }} km</p>
+        <p *ngIf="ride.cancelledBy"><strong>Cancelled by:</strong> {{ ride.cancelledBy }}</p>
+        <p *ngIf="ride.cancellationReason"><strong>Cancellation reason:</strong> {{ ride.cancellationReason }}</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="ride.driverInProgressCancelSettlement as st">
+      <ion-card-header>
+        <ion-card-title>Driver in-trip cancellation settlement</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p><strong>Partial distance (km):</strong> {{ st.partialDistanceKm ?? '—' }}</p>
+        <p><strong>Driver partial (₹):</strong> {{ st.driverPartialAmount ?? '—' }}</p>
+        <p><strong>Rider penalty (₹):</strong> {{ st.riderPenaltyAmount ?? '—' }}</p>
+        <p><strong>Total charge (₹):</strong> {{ st.riderTotalCharge ?? '—' }}</p>
+        <p><strong>Prepaid (₹):</strong> {{ st.prepaidTotal ?? '—' }}</p>
+        <p><strong>Additional due (₹):</strong> {{ st.additionalDue ?? '—' }}</p>
+        <p><strong>Refund due (₹):</strong> {{ st.refundDue ?? '—' }}</p>
+        <p><strong>Fine recipient:</strong> {{ st.fineRecipient ?? '—' }}</p>
+        <p><strong>Rider payment status:</strong> {{ st.riderPaymentStatus ?? '—' }}</p>
+        <p *ngIf="st.ledgerFinalizedAt"><strong>Ledger finalized:</strong> {{ st.ledgerFinalizedAt | date:'medium' }}</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="getPickupCoords() || getDropoffCoords()">
+      <ion-card-header>
+        <ion-card-title>Map</ion-card-title>
+        <ion-card-subtitle *ngIf="driverLocation">Live driver tracking active</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <div id="ride-detail-map" class="map-container"></div>
+        <ion-button *ngIf="getMapUrl()" expand="block" fill="outline" [href]="getMapUrl()" target="_blank" rel="noopener">
+          <ion-icon name="map-outline" slot="start"></ion-icon>
+          Open in Google Maps
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="timeline.length">
+      <ion-card-header>
+        <ion-card-title>Timeline</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="none">
+          <ion-item *ngFor="let event of timeline">
+            <ion-label>
+              <h3>{{ event.label }}</h3>
+              <p>{{ event.time | date:'medium' }}</p>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="isActive(ride)">
+      <ion-card-content>
+        <ion-button expand="block" color="danger" (click)="cancelRide()">Cancel Ride</ion-button>
+        <ion-button expand="block" fill="outline" (click)="assignDriver()">Assign Driver</ion-button>
+      </ion-card-content>
+    </ion-card>
+  </ng-container>
+</ion-content>

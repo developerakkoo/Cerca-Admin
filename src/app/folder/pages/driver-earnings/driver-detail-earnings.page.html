@@ -1,0 +1,146 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Driver Earnings</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense" class="ion-no-border">
+    <ion-toolbar>
+      <ion-title size="large">Driver Earnings</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <div class="detail-container">
+    <ion-card *ngIf="driver" class="summary-card">
+      <ion-card-header>
+        <ion-card-title>{{ driver?.name || 'Driver' }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>{{ driver?.phone || '' }}</p>
+        <p>{{ driver?.email || '' }}</p>
+        <div class="summary-grid" *ngIf="summary">
+          <div class="summary-item">
+            <p>Total Gross</p>
+            <h3>{{ formatCurrency(summary?.totalGrossEarnings || 0) }}</h3>
+          </div>
+          <div class="summary-item">
+            <p>Total Driver Earnings</p>
+            <h3>{{ formatCurrency(summary?.totalDriverEarnings || 0) }}</h3>
+          </div>
+          <div class="summary-item">
+            <p>Pending</p>
+            <h3>{{ formatCurrency(summary?.totalPendingEarnings || 0) }}</h3>
+          </div>
+          <div class="summary-item">
+            <p>Completed</p>
+            <h3>{{ formatCurrency(summary?.totalCompletedEarnings || 0) }}</h3>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="filter-card">
+      <ion-card-content>
+        <div class="filter-row">
+          <ion-select
+            label="Status"
+            labelPlacement="stacked"
+            [(ngModel)]="status"
+            (ionChange)="onFilterChange()">
+            <ion-select-option value="">All</ion-select-option>
+            <ion-select-option value="pending">Pending</ion-select-option>
+            <ion-select-option value="completed">Completed</ion-select-option>
+            <ion-select-option value="failed">Failed</ion-select-option>
+            <ion-select-option value="refunded">Refunded</ion-select-option>
+          </ion-select>
+          <ion-input
+            type="date"
+            label="Start Date"
+            labelPlacement="stacked"
+            [(ngModel)]="startDate"
+            (ionChange)="onFilterChange()">
+          </ion-input>
+          <ion-input
+            type="date"
+            label="End Date"
+            labelPlacement="stacked"
+            [(ngModel)]="endDate"
+            (ionChange)="onFilterChange()">
+          </ion-input>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="bulk-card">
+      <ion-card-content>
+        <div class="bulk-row">
+          <ion-select [(ngModel)]="bulkStatus" interface="popover">
+            <ion-select-option value="pending">Pending</ion-select-option>
+            <ion-select-option value="completed">Completed</ion-select-option>
+            <ion-select-option value="failed">Failed</ion-select-option>
+            <ion-select-option value="refunded">Refunded</ion-select-option>
+          </ion-select>
+          <ion-button (click)="bulkUpdateStatus()">Update Selected</ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <div *ngIf="isLoading" class="loading-container">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Loading earnings...</p>
+    </div>
+
+    <ion-card *ngIf="error && !isLoading" color="danger" class="error-card">
+      <ion-card-content>
+        <p>{{ error }}</p>
+        <ion-button fill="outline" (click)="loadEarnings(currentPage)">Retry</ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="!isLoading && !error" class="table-card">
+      <ion-card-content>
+        <div class="table-wrapper">
+          <table class="earnings-table">
+            <thead>
+              <tr>
+                <th>Select</th>
+                <th>Ride</th>
+                <th>Date</th>
+                <th>Gross</th>
+                <th>Platform Fee</th>
+                <th>Driver</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let earning of earnings">
+                <td>
+                  <ion-checkbox
+                    [checked]="selectedEarnings.has(earning.id)"
+                    (ionChange)="toggleSelect(earning.id)">
+                  </ion-checkbox>
+                </td>
+                <td>{{ earning.rideId || 'N/A' }}</td>
+                <td>{{ formatDate(earning.rideDate) }}</td>
+                <td>{{ formatCurrency(earning.grossFare || 0) }}</td>
+                <td>{{ formatCurrency(earning.platformFee || 0) }}</td>
+                <td>{{ formatCurrency(earning.driverEarning || 0) }}</td>
+                <td>{{ earning.paymentStatus }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div *ngIf="earnings.length === 0" class="empty-state">
+          <ion-icon name="cash-outline" class="empty-icon"></ion-icon>
+          <p>No earnings found</p>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
+

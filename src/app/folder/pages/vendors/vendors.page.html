@@ -1,0 +1,158 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Vendors</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense" class="ion-no-border">
+    <ion-toolbar>
+      <ion-title size="large">Vendors</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <div class="admin-list-container">
+    <ion-card class="filter-card">
+      <ion-card-content>
+        <div class="filter-row filter-row-search-dropdown">
+          <ion-searchbar
+            placeholder="Search by business, owner, email, phone"
+            [(ngModel)]="searchTerm"
+            (ionInput)="onSearchInput()"
+            class="search-bar search-bar-flex">
+          </ion-searchbar>
+          <ion-item lines="none" class="filter-dropdown-item">
+            <ion-select
+              label="Verification"
+              labelPlacement="stacked"
+              interface="popover"
+              [(ngModel)]="filterVerified"
+              (ionChange)="onFilterChange()">
+              <ion-select-option value="all">All</ion-select-option>
+              <ion-select-option value="verified">Verified</ion-select-option>
+              <ion-select-option value="pending">Pending</ion-select-option>
+              <ion-select-option value="rejected">Rejected</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </div>
+        <div class="filter-row">
+          <ion-segment [(ngModel)]="filterStatus" (ionChange)="onFilterChange()" class="filter-segment">
+            <ion-segment-button value="all">
+              <ion-label>All status</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="active">
+              <ion-label>Active</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="blocked">
+              <ion-label>Blocked</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <div *ngIf="isLoading" class="loading-container">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Loading vendors...</p>
+    </div>
+
+    <ion-card *ngIf="error && !isLoading" color="danger" class="error-card">
+      <ion-card-content>
+        <p>{{ error }}</p>
+        <ion-button fill="outline" (click)="loadVendors()">Retry</ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="!isLoading && !error" class="table-card">
+      <ion-card-content>
+        <div class="table-wrapper">
+          <table class="admin-data-table">
+            <thead>
+              <tr>
+                <th>Business</th>
+                <th>Owner</th>
+                <th>Contact</th>
+                <th>Verified</th>
+                <th>Status</th>
+                <th class="actions-header">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let vendor of pagedVendors" class="table-row table-row-click" (click)="viewVendor(vendor)">
+                <td>
+                  <strong>{{ vendor.businessName }}</strong>
+                  <p *ngIf="vendor.rejectionReason" class="cell-muted ion-no-margin">{{ vendor.rejectionReason }}</p>
+                </td>
+                <td>{{ vendor.ownerName || '—' }}</td>
+                <td>
+                  <div class="cell-stack">
+                    <span>{{ vendor.email || '—' }}</span>
+                    <span class="cell-muted">{{ vendor.phone || '—' }}</span>
+                  </div>
+                </td>
+                <td>
+                  <ion-badge [color]="vendorVerificationBadgeColor(vendor)">
+                    {{ vendorVerificationShortLabel(vendor) }}
+                  </ion-badge>
+                </td>
+                <td>
+                  <ion-badge [color]="vendor.isActive ? 'success' : 'medium'">
+                    {{ vendor.isActive ? 'Active' : 'Blocked' }}
+                  </ion-badge>
+                </td>
+                <td class="actions-cell" (click)="$event.stopPropagation()">
+                  <ion-button fill="clear" size="small" class="action-btn" (click)="viewVendor(vendor)">
+                    <ion-icon name="chevron-forward-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div *ngIf="totalFiltered === 0" class="empty-state">
+          <ion-icon name="storefront-outline" class="empty-icon"></ion-icon>
+          <p>No vendors found</p>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="!isLoading && !error && totalFiltered > 0" class="pagination-card">
+      <ion-card-content>
+        <div class="pagination-container">
+          <div class="pagination-info">
+            <span>{{ getDisplayRange() }}</span>
+            <div class="limit-selector">
+              <label>Items per page:</label>
+              <ion-select [(ngModel)]="limit" (ionChange)="onLimitChange()" interface="popover">
+                <ion-select-option *ngFor="let opt of limitOptions" [value]="opt">{{ opt }}</ion-select-option>
+              </ion-select>
+            </div>
+          </div>
+          <div class="pagination-controls" *ngIf="totalPages > 1">
+            <ion-button fill="clear" [disabled]="currentPage === 1" (click)="previousPage()">
+              <ion-icon name="chevron-back-outline" slot="start"></ion-icon>
+              Previous
+            </ion-button>
+            <div class="page-numbers">
+              <ion-button
+                *ngFor="let page of getPageNumbers()"
+                fill="clear"
+                [class.active]="page === currentPage"
+                (click)="goToPage(page)">
+                {{ page }}
+              </ion-button>
+            </div>
+            <ion-button fill="clear" [disabled]="currentPage === totalPages" (click)="nextPage()">
+              Next
+              <ion-icon name="chevron-forward-outline" slot="end"></ion-icon>
+            </ion-button>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

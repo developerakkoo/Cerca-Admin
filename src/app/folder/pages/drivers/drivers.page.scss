@@ -1,0 +1,73 @@
+.table-row-click {
+  cursor: pointer;
+}
+
+.driver-cell {
+  .driver-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--ion-color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+
+    .avatar-initials {
+      color: white;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+  }
+
+  .driver-name {
+    font-weight: 500;
+    color: var(--ion-color-dark);
+  }
+}
+
+.cell-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.875rem;
+}
+
+.cell-stack-tight {
+  gap: 0.15rem;
+}
+
+.cell-muted {
+  color: var(--ion-color-medium);
+  font-size: 0.8rem;
+}
+
+.cell-note {
+  font-size: 0.75rem;
+  display: block;
+
+  &.warn {
+    color: var(--ion-color-warning-shade);
+  }
+}
+
+.txt-online {
+  color: var(--ion-color-success);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.txt-offline {
+  color: var(--ion-color-medium);
+  font-size: 0.8rem;
+}

@@ -2,6 +2,25 @@ ion-menu ion-content {
   --background: var(--ion-item-background, var(--ion-background-color, #fff));
 }
 
+ion-menu {
+  --width: 360px;
+}
+
+/**
+ * Ionic split-pane defaults --side-min-width to 270px; align host vars with the menu
+ * so the visible rail is actually narrow on desktop.
+ */
+ion-split-pane.split-pane-visible {
+  --side-width: 360px;
+  --side-min-width: 360px;
+  --side-max-width: 360px;
+}
+
+ion-split-pane.split-pane-visible ion-menu {
+  --width: 360px;
+  --min-width: 360px;
+  --max-width: 360px;
+}
 ion-menu.md ion-content {
   --padding-start: 8px;
   --padding-end: 8px;

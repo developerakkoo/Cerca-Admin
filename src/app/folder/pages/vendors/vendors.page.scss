@@ -1,0 +1,15 @@
+.table-row-click {
+  cursor: pointer;
+}
+
+.cell-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.875rem;
+}
+
+.cell-muted {
+  color: var(--ion-color-medium);
+  font-size: 0.8rem;
+}
