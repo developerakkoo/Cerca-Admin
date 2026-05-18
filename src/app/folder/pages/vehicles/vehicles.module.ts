@@ -8,6 +8,7 @@ import { VehiclesPageRoutingModule } from './vehicles-routing.module';
 import { VehiclesPage } from './vehicles.page';
 import { FleetVehicleDetailPage } from './fleet-vehicle-detail/fleet-vehicle-detail.page';
 import { DriverVehicleDetailPage } from './driver-vehicle-detail/driver-vehicle-detail.page';
+import { AdminNotificationsToolbarButtonComponent } from '../../../components/admin-notifications-toolbar-button/admin-notifications-toolbar-button.component';
 
 @NgModule({
   imports: [
@@ -16,6 +17,7 @@ import { DriverVehicleDetailPage } from './driver-vehicle-detail/driver-vehicle-
     IonicModule,
     VehiclesPageRoutingModule,
     DriverVehicleDetailPage,
+    AdminNotificationsToolbarButtonComponent,
   ],
   declarations: [VehiclesPage, FleetVehicleDetailPage],
 })

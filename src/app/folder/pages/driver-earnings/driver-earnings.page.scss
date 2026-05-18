@@ -62,3 +62,22 @@
   margin-bottom: 8px;
 }
 
+.driver-filter-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 200px;
+}
+
+.filter-stacked-label {
+  font-size: 0.75rem;
+  color: var(--ion-color-medium);
+  font-weight: 500;
+}
+
+.driver-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}

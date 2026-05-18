@@ -5,10 +5,10 @@
 export const environment = {
   production: false,
   // Production backend
-  // apiBaseUrl: 'https://api.myserverdevops.com',
+  // apiBaseUrl: 'https://api.cercacars.online',
   // Local backend (for development)
   // apiBaseUrl: 'http://192.168.1.14:3000',
-  apiBaseUrl: 'https://api.myserverdevops.com',
+  apiBaseUrl: 'https://api.cercacars.online',
   // Same key as Cerca user app for ride detail map; restrict by HTTP referrer in Google Cloud Console
   googleMapsApiKey: 'AIzaSyDQq0QpnwQKzDR99ObP1frWj_uRTQ54pbo',
 };

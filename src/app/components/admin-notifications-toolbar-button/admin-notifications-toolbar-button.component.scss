@@ -1,0 +1,35 @@
+.toolbar-notif-host {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.toolbar-notif-btn {
+  margin: 0;
+  --padding-start: 8px;
+  --padding-end: 8px;
+}
+
+.toolbar-notif-badge {
+  position: absolute;
+  bottom: 4px;
+  inset-inline-end: 2px;
+  inset-inline-start: auto;
+  top: auto;
+  min-width: 14px;
+  height: 14px;
+  font-size: 8px;
+  font-weight: 600;
+  line-height: 14px;
+  padding-inline: 3px;
+  padding-block: 0;
+  border-radius: 7px;
+  pointer-events: none;
+  z-index: 2;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -8,6 +8,7 @@ import { IonicModule } from '@ionic/angular';
 import { SupportListPageRoutingModule } from './support-list-routing.module';
 
 import { SupportListPage } from './support-list.page';
+import { AdminNotificationsToolbarButtonComponent } from '../../../../components/admin-notifications-toolbar-button/admin-notifications-toolbar-button.component';
 
 @NgModule({
   imports: [
@@ -15,7 +16,8 @@ import { SupportListPage } from './support-list.page';
     FormsModule,
     HttpClientModule,
     IonicModule,
-    SupportListPageRoutingModule
+    SupportListPageRoutingModule,
+    AdminNotificationsToolbarButtonComponent,
   ],
   declarations: [SupportListPage]
 })

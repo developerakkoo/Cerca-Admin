@@ -8,6 +8,7 @@ import { IonicModule } from '@ionic/angular';
 import { SupportChatPageRoutingModule } from './support-chat-routing.module';
 
 import { SupportChatPage } from './support-chat.page';
+import { AdminNotificationsToolbarButtonComponent } from '../../../../components/admin-notifications-toolbar-button/admin-notifications-toolbar-button.component';
 
 @NgModule({
   imports: [
@@ -15,7 +16,8 @@ import { SupportChatPage } from './support-chat.page';
     FormsModule,
     HttpClientModule,
     IonicModule,
-    SupportChatPageRoutingModule
+    SupportChatPageRoutingModule,
+    AdminNotificationsToolbarButtonComponent,
   ],
   declarations: [SupportChatPage]
 })

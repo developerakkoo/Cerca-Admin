@@ -1,0 +1,172 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>FCM test</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="clearLogs()" [disabled]="!logs.length">
+        <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="test-fcm-content">
+  <div class="test-fcm-grid">
+
+    <ion-card class="form-card">
+      <ion-card-header>
+        <ion-card-title>Compose</ion-card-title>
+        <ion-card-subtitle>Send a Firebase push to a single user, driver, or raw token list.</ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content>
+        <ion-list lines="none">
+          <ion-item>
+            <ion-label position="stacked">Target</ion-label>
+            <ion-segment [(ngModel)]="mode" mode="ios">
+              <ion-segment-button value="userId">
+                <ion-label>User ID</ion-label>
+              </ion-segment-button>
+              <ion-segment-button value="driverId">
+                <ion-label>Driver ID</ion-label>
+              </ion-segment-button>
+              <ion-segment-button value="tokens">
+                <ion-label>Raw token(s)</ion-label>
+              </ion-segment-button>
+            </ion-segment>
+          </ion-item>
+
+          <ion-item *ngIf="mode === 'userId'">
+            <ion-label position="stacked">User ObjectId</ion-label>
+            <ion-input
+              [(ngModel)]="userId"
+              placeholder="65b0c1...e3"
+              autocomplete="off"
+            ></ion-input>
+          </ion-item>
+
+          <ion-item *ngIf="mode === 'driverId'">
+            <ion-label position="stacked">Driver ObjectId</ion-label>
+            <ion-input
+              [(ngModel)]="driverId"
+              placeholder="65b0c1...e3"
+              autocomplete="off"
+            ></ion-input>
+          </ion-item>
+
+          <ion-item *ngIf="mode === 'tokens'">
+            <ion-label position="stacked">FCM tokens (comma or newline separated, max 100)</ion-label>
+            <ion-textarea
+              [(ngModel)]="tokensRaw"
+              autoGrow="true"
+              rows="3"
+              placeholder="dY8Q...AB, fK21...XY"
+            ></ion-textarea>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Preset</ion-label>
+            <div class="preset-row">
+              <ion-button
+                *ngFor="let p of presets"
+                size="small"
+                fill="outline"
+                (click)="applyPreset(p)"
+              >{{ p.label }}</ion-button>
+            </div>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Title</ion-label>
+            <ion-input [(ngModel)]="title" placeholder="Notification title"></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Body</ion-label>
+            <ion-textarea
+              [(ngModel)]="body"
+              autoGrow="true"
+              rows="2"
+              placeholder="Notification body (can be empty)"
+            ></ion-textarea>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">data (JSON object)</ion-label>
+            <ion-textarea
+              class="json-editor"
+              [(ngModel)]="dataJson"
+              (ngModelChange)="validateJson()"
+              autoGrow="true"
+              rows="6"
+              placeholder='{ "appType": "ride_status" }'
+            ></ion-textarea>
+            <ion-text *ngIf="jsonError" color="danger">
+              <small>{{ jsonError }}</small>
+            </ion-text>
+          </ion-item>
+
+          <ion-item>
+            <ion-label>Data-only payload (no notification block)</ion-label>
+            <ion-toggle [(ngModel)]="dataOnly" slot="end"></ion-toggle>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Android channel ID (optional)</ion-label>
+            <ion-input
+              [(ngModel)]="androidChannelId"
+              placeholder="cerca_notifications"
+            ></ion-input>
+          </ion-item>
+        </ion-list>
+
+        <ion-button
+          expand="block"
+          (click)="send()"
+          [disabled]="!canSend()"
+        >
+          <ion-spinner *ngIf="sending" name="dots" slot="start"></ion-spinner>
+          <ion-icon *ngIf="!sending" name="send" slot="start"></ion-icon>
+          {{ sending ? 'Sending...' : 'Send test push' }}
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="log-card">
+      <ion-card-header>
+        <ion-card-title>Log ({{ logs.length }})</ion-card-title>
+        <ion-card-subtitle>
+          Most recent attempts first. Tokens are masked server-side.
+        </ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <div *ngIf="!logs.length" class="empty-hint">
+          <ion-icon name="document-text-outline" size="large" color="medium"></ion-icon>
+          <p>No attempts yet. Send a push to populate this panel.</p>
+        </div>
+
+        <div *ngFor="let entry of logs" class="log-entry" [attr.data-status]="entry.status">
+          <header>
+            <ion-badge
+              [color]="entry.status === 'success' ? 'success' : entry.status === 'partial' ? 'warning' : 'danger'"
+            >{{ entry.status }}</ion-badge>
+            <span class="log-time">{{ entry.timestamp | date: 'mediumTime' }}</span>
+            <span class="log-meta">
+              {{ entry.request.mode }} · {{ entry.request.target }}
+              <ng-container *ngIf="entry.httpStatus !== null">· HTTP {{ entry.httpStatus }}</ng-container>
+              <ng-container *ngIf="entry.request.dataOnly">· data-only</ng-container>
+            </span>
+          </header>
+          <p class="log-summary">{{ entry.summary }}</p>
+          <details>
+            <summary>Response JSON</summary>
+            <pre>{{ entry.responseJson }}</pre>
+          </details>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+  </div>
+</ion-content>

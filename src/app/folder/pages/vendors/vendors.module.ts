@@ -8,13 +8,15 @@ import { VendorsPageRoutingModule } from './vendors-routing.module';
 
 import { VendorsPage } from './vendors.page';
 import { VendorDetailPage } from './vendor-detail/vendor-detail.page';
+import { AdminNotificationsToolbarButtonComponent } from '../../../components/admin-notifications-toolbar-button/admin-notifications-toolbar-button.component';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    VendorsPageRoutingModule
+    VendorsPageRoutingModule,
+    AdminNotificationsToolbarButtonComponent,
   ],
   declarations: [VendorsPage, VendorDetailPage]
 })

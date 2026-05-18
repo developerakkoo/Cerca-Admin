@@ -29,6 +29,9 @@ import {
   workflowRoutedToLabel,
 } from '../../../../core/driver-detail-labels';
 
+/** Matches driver app `DocumentIdentityValidators.farFuturePlaceholderIso()`. */
+const COMPLIANCE_PLACEHOLDER_EXPIRY_ISO = '2099-12-31T12:00:00.000Z';
+
 @Component({
   selector: 'app-driver-detail',
   templateUrl: './driver-detail.page.html',
@@ -67,7 +70,7 @@ export class DriverDetailPage implements OnInit, OnDestroy {
 
   vehicleRejectModalOpen = false;
   vehicleRejectReason = '';
-  vehicleRejectAllowResubmit = false;
+  vehicleRejectAllowResubmit = true;
 
   private goToMap: any = null;
   private goToPolyline: any = null;
@@ -83,11 +86,9 @@ export class DriverDetailPage implements OnInit, OnDestroy {
   ) {
     this.complianceForm = this.fb.group({
       aadhaarNumber: ['', Validators.required],
-      aadhaarExpiry: [''],
       dlNumber: ['', Validators.required],
       dlExpiry: [''],
       panNumber: ['', Validators.required],
-      panExpiry: [''],
     });
   }
 
@@ -384,11 +385,9 @@ export class DriverDetailPage implements OnInit, OnDestroy {
     const pan = byType('PAN');
     this.complianceForm.patchValue({
       aadhaarNumber: a?.documentNumber ?? '',
-      aadhaarExpiry: a?.expiryDate ? String(a.expiryDate).slice(0, 10) : '',
       dlNumber: dl?.documentNumber ?? '',
       dlExpiry: dl?.expiryDate ? String(dl.expiryDate).slice(0, 10) : '',
       panNumber: pan?.documentNumber ?? '',
-      panExpiry: pan?.expiryDate ? String(pan.expiryDate).slice(0, 10) : '',
     });
   }
 
@@ -410,7 +409,7 @@ export class DriverDetailPage implements OnInit, OnDestroy {
       {
         documentType: 'AADHAAR',
         documentNumber: v.aadhaarNumber.trim(),
-        expiryDate: this.isoEndOfDay(v.aadhaarExpiry) ?? undefined,
+        expiryDate: COMPLIANCE_PLACEHOLDER_EXPIRY_ISO,
       },
       {
         documentType: 'DRIVING_LICENSE',
@@ -420,7 +419,7 @@ export class DriverDetailPage implements OnInit, OnDestroy {
       {
         documentType: 'PAN',
         documentNumber: v.panNumber.trim(),
-        expiryDate: this.isoEndOfDay(v.panExpiry) ?? undefined,
+        expiryDate: COMPLIANCE_PLACEHOLDER_EXPIRY_ISO,
       },
     ];
     this.savingCompliance = true;
@@ -749,7 +748,7 @@ export class DriverDetailPage implements OnInit, OnDestroy {
 
   openVehicleRejectModal(): void {
     this.vehicleRejectReason = '';
-    this.vehicleRejectAllowResubmit = false;
+    this.vehicleRejectAllowResubmit = true;
     this.vehicleRejectModalOpen = true;
   }
 

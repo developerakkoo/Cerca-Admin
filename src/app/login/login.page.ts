@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { MenuController, AlertController } from '@ionic/angular';
 import { AdminAuthService } from '../services/admin-auth.service';
 import { AdminSocketService } from '../services/admin-socket.service';
+import { EMAIL_MAX_LENGTH, normalizeEmail } from '../shared/validators/email.validators';
 
 @Component({
   selector: 'app-login',
@@ -26,7 +27,7 @@ export class LoginPage implements OnInit {
     private socketService: AdminSocketService
   ) {
     this.loginForm = this.formBuilder.group({
-      email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.required, Validators.email, Validators.maxLength(EMAIL_MAX_LENGTH)]],
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
@@ -49,9 +50,10 @@ export class LoginPage implements OnInit {
 
     if (this.loginForm.valid) {
       const { email, password } = this.loginForm.value;
+      const normalizedEmail = normalizeEmail(email);
       
       this.isLoading = true;
-      this.adminAuth.login(email, password).subscribe({
+      this.adminAuth.login(normalizedEmail, password).subscribe({
         next: async (response) => {
           this.isLoading = false;
           await this.menuController.enable(true);

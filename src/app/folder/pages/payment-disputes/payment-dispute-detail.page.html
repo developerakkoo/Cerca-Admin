@@ -1,0 +1,66 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/folder/payment-disputes"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Dispute detail</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding" *ngIf="dispute">
+  <h2>{{ dispute.issueType }}</h2>
+  <p><strong>Status:</strong> {{ dispute.status }}</p>
+  <p><strong>Fare:</strong> ₹{{ dispute.paymentContext?.fare }}</p>
+  <p><strong>Remaining:</strong> ₹{{ dispute.paymentContext?.amountRemaining }}</p>
+  <p><strong>Method:</strong> {{ dispute.paymentContext?.paymentMethod }}</p>
+  <p *ngIf="dispute.driverNote"><strong>Driver note:</strong> {{ dispute.driverNote }}</p>
+
+  <ion-list *ngIf="dispute.evidence?.length">
+    <ion-list-header>Evidence</ion-list-header>
+    <ion-item *ngFor="let e of dispute.evidence">
+      <ion-label>
+        <p>{{ e.role }} · {{ e.note || '—' }}</p>
+        <a [href]="e.url" target="_blank">{{ e.url }}</a>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <ion-item>
+    <ion-label position="stacked">Admin note</ion-label>
+    <ion-textarea [(ngModel)]="adminNote" rows="3"></ion-textarea>
+  </ion-item>
+
+  <ion-item *ngIf="dispute.status === 'UNDER_REVIEW'">
+    <ion-label position="stacked">Compensation (company settle)</ion-label>
+    <ion-input type="number" [(ngModel)]="compensationAmount"></ion-input>
+  </ion-item>
+
+  <div class="actions" *ngIf="dispute.status === 'UNDER_REVIEW'">
+    <ion-button expand="block" color="danger" (click)="resolve('CONFIRM_FRAUD')">
+      Confirm fraud — charge rider
+    </ion-button>
+    <ion-button expand="block" color="success" (click)="resolve('REJECT_DRIVER_COMPLAINT')">
+      Reject driver complaint
+    </ion-button>
+    <ion-button expand="block" (click)="resolve('VERIFY_PAYMENT_CAPTURED')">
+      Payment verified (gateway)
+    </ion-button>
+    <ion-button expand="block" fill="outline" (click)="resolve('COMPANY_SETTLE')">
+      Company settle driver
+    </ion-button>
+    <ion-button expand="block" fill="clear" (click)="resolve('WAIVE')">Waive</ion-button>
+  </div>
+
+  <div class="actions" *ngIf="dispute.status === 'AWAITING_RIDER_PAYMENT'">
+    <ion-button expand="block" fill="outline" (click)="resolve('WAIVE')">Waive dues</ion-button>
+  </div>
+
+  <ion-card *ngIf="dispute.auditLog?.length">
+    <ion-card-header><ion-card-title>Audit log</ion-card-title></ion-card-header>
+    <ion-card-content>
+      <p *ngFor="let a of dispute.auditLog">
+        {{ a.at | date:'short' }} — {{ a.action }}: {{ a.fromStatus }} → {{ a.toStatus }}
+      </p>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

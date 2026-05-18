@@ -178,10 +178,23 @@ export class RidesPage implements OnInit, OnDestroy {
     return d.name || d.phone || '—';
   }
 
-  shortRideId(ride: any): string {
-    const id = ride?._id;
-    if (!id) return '—';
-    const s = String(id);
-    return s.length > 12 ? `${s.slice(0, 10)}…` : s;
+  /** Human-readable row label — no MongoDB id shown. */
+  rideRowLabel(ride: any): string {
+    const when = ride?.createdAt
+      ? new Date(ride.createdAt).toLocaleString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : '';
+    const r = this.riderName(ride);
+    const d = this.driverName(ride);
+    const primary = r !== '—' ? r : d;
+    if (when && primary !== '—') {
+      return `${when} · ${primary}`;
+    }
+    return when || primary || '—';
   }
 }

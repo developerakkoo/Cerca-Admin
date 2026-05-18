@@ -3,6 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AdminVehicleInventoryResponse } from '../core/admin-vehicle-inventory';
+import { normalizeEmail } from '../shared/validators/email.validators';
+import { normalizePhoneDigits } from '../shared/validators/phone.validators';
 
 @Injectable({
   providedIn: 'root'
@@ -14,6 +16,31 @@ export class AdminApiService {
 
   getDashboard(params?: Record<string, string | number>): Observable<any> {
     return this.http.get(`${this.baseUrl}/admin/dashboard`, { params: this.buildParams(params) });
+  }
+
+  getPaymentDisputes(params?: Record<string, string | number>): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/payment-disputes`, {
+      params: this.buildParams(params),
+    });
+  }
+
+  getPaymentDisputeById(id: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/payment-disputes/${id}`);
+  }
+
+  getPaymentDisputeStats(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/payment-disputes/stats`);
+  }
+
+  resolvePaymentDispute(
+    id: string,
+    body: { action: string; adminNote?: string; compensationAmount?: number }
+  ): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/admin/payment-disputes/${id}/resolve`, body);
+  }
+
+  triggerPaymentDisputeGatewayReconcile(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/payment-disputes/reconcile-gateway`, {});
   }
 
   getEarnings(params?: Record<string, string | number>): Observable<any> {
@@ -30,11 +57,13 @@ export class AdminApiService {
 
   updateUser(id: string, userData: any, profilePic?: File): Observable<any> {
     const formData = new FormData();
+    const normalizedEmail = normalizeEmail(userData.email);
+    const normalizedPhone = normalizePhoneDigits(userData.phoneNumber);
     
     // Add user data fields
     if (userData.fullName) formData.append('fullName', userData.fullName);
-    if (userData.email) formData.append('email', userData.email);
-    if (userData.phoneNumber) formData.append('phoneNumber', userData.phoneNumber);
+    if (normalizedEmail) formData.append('email', normalizedEmail);
+    if (normalizedPhone) formData.append('phoneNumber', normalizedPhone);
     
     // Add profile picture if provided
     if (profilePic) {
@@ -180,6 +209,15 @@ export class AdminApiService {
     return this.http.get(`${this.baseUrl}/admin/drivers/earnings/analytics`, { params: this.buildParams(params) });
   }
 
+  /** Outstanding cash platform fees drivers owe admin */
+  getCashReceivables(params?: Record<string, string | number>): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/drivers/cash-receivables`, { params: this.buildParams(params) });
+  }
+
+  collectCashPlatformFee(earningId: string, payload?: { notes?: string }): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/admin/drivers/earnings/${earningId}/cash-platform-collect`, payload || {});
+  }
+
   getHeatmapData(params?: Record<string, string | number>): Observable<any> {
     return this.http.get(`${this.baseUrl}/admin/analytics/heatmap`, { params: this.buildParams(params) });
   }
@@ -314,6 +352,75 @@ export class AdminApiService {
     body: { reason: string; allowDocumentResubmit?: boolean }
   ): Observable<any> {
     return this.http.patch(`${this.baseUrl}/admin/fleet-vehicles/${id}/reject`, body);
+  }
+
+  /** In-app admin notifications (JWT). */
+  getAdminNotifications(
+    params?: Record<string, string | number | boolean>
+  ): Observable<{
+    success: boolean;
+    notifications: any[];
+    total: number;
+    unreadCount: number;
+    count: number;
+  }> {
+    return this.http.get<{
+      success: boolean;
+      notifications: any[];
+      total: number;
+      unreadCount: number;
+      count: number;
+    }>(`${this.baseUrl}/admin/notifications`, {
+      params: this.buildParams(params),
+    });
+  }
+
+  markAdminNotificationRead(id: string): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/admin/notifications/${id}/read`, {});
+  }
+
+  markAllAdminNotificationsRead(): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/admin/notifications/read-all`, {});
+  }
+
+  /**
+   * Send a test FCM payload from the admin debug page.
+   * See `Test_Main_Cerca_cabs/Controllers/Admin/fcm.controller.js` for the
+   * accepted shape and the structured response.
+   */
+  sendTestFcm(payload: {
+    mode: 'userId' | 'driverId' | 'tokens';
+    userId?: string;
+    driverId?: string;
+    tokens?: string[];
+    title: string;
+    body: string;
+    data?: Record<string, any>;
+    dataOnly?: boolean;
+    androidChannelId?: string;
+  }): Observable<{
+    success: boolean;
+    mode: string;
+    tokenCount: number;
+    dispatch: {
+      mode: string;
+      skipped: boolean;
+      reason: string | null;
+      successCount: number;
+      failureCount: number;
+      messageId: string | null;
+      error: string | null;
+    };
+    responses?: Array<{
+      index: number;
+      token: string;
+      success: boolean;
+      messageId: string | null;
+      errorCode: string | null;
+      errorMessage: string | null;
+    }>;
+  }> {
+    return this.http.post<any>(`${this.baseUrl}/admin/test/fcm`, payload);
   }
 
   private buildParams(params?: Record<string, any>): HttpParams {

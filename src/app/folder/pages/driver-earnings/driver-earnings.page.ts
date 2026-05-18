@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AlertController, ToastController } from '@ionic/angular';
+import { AlertController, LoadingController, ToastController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { AdminApiService } from '../../../services/admin-api.service';
 
@@ -16,6 +16,7 @@ export class DriverEarningsPage implements OnInit {
   error: string | null = null;
 
   driverId = '';
+  driverFilterLabel = '';
   status = '';
   startDate = '';
   endDate = '';
@@ -27,10 +28,14 @@ export class DriverEarningsPage implements OnInit {
 
   statusSelections: Record<string, string> = {};
 
+  cashReceivables: any[] = [];
+  cashReceivablesLoading = false;
+
   constructor(
     private adminApi: AdminApiService,
     private alertController: AlertController,
     private toastController: ToastController,
+    private loadingController: LoadingController,
     private router: Router
   ) {}
 
@@ -40,6 +45,58 @@ export class DriverEarningsPage implements OnInit {
 
   ionViewWillEnter() {
     this.loadEarnings(this.currentPage);
+    this.loadCashReceivables();
+  }
+
+  loadCashReceivables() {
+    this.cashReceivablesLoading = true;
+    const params: Record<string, string | number> = {};
+    if (this.driverId) params['driverId'] = this.driverId;
+    this.adminApi.getCashReceivables(params).subscribe({
+      next: (res) => {
+        this.cashReceivables = res?.data?.items || [];
+        this.cashReceivablesLoading = false;
+      },
+      error: () => {
+        this.cashReceivables = [];
+        this.cashReceivablesLoading = false;
+      },
+    });
+  }
+
+  async confirmCollectCash(item: { earningId: string; amountDue?: number }) {
+    const alert = await this.alertController.create({
+      header: 'Record collection',
+      message: `Mark platform fee ₹${item.amountDue ?? ''} as collected from driver?`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Confirm',
+          handler: () => {
+            this.adminApi.collectCashPlatformFee(item.earningId, {}).subscribe({
+              next: async () => {
+                const t = await this.toastController.create({
+                  message: 'Collection recorded',
+                  duration: 2000,
+                  color: 'success',
+                });
+                await t.present();
+                this.loadCashReceivables();
+              },
+              error: async (err) => {
+                const t = await this.toastController.create({
+                  message: err?.error?.message || 'Failed to record',
+                  duration: 2500,
+                  color: 'danger',
+                });
+                await t.present();
+              },
+            });
+          },
+        },
+      ],
+    });
+    await alert.present();
   }
 
   loadEarnings(page: number = 1) {
@@ -117,9 +174,103 @@ export class DriverEarningsPage implements OnInit {
 
   resetFilters() {
     this.driverId = '';
+    this.driverFilterLabel = '';
     this.status = '';
     this.startDate = '';
     this.endDate = '';
+    this.onFilterChange();
+  }
+
+  clearDriverFilter(): void {
+    this.driverId = '';
+    this.driverFilterLabel = '';
+    this.onFilterChange();
+  }
+
+  async openDriverFilterPicker(): Promise<void> {
+    const alert = await this.alertController.create({
+      header: 'Filter by driver',
+      message: 'Search by phone or email:',
+      inputs: [{ name: 'query', type: 'text', placeholder: 'Phone or email' }],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Search',
+          handler: (data) => {
+            const q = String(data?.query ?? '').trim();
+            if (!q) {
+              this.toastController
+                .create({ message: 'Enter phone or email', color: 'warning', duration: 2000 })
+                .then((t) => t.present());
+              return false;
+            }
+            void this.runDriverSearchForFilter(q);
+            return true;
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  private async runDriverSearchForFilter(query: string): Promise<void> {
+    const loader = await this.loadingController.create({ message: 'Searching…' });
+    await loader.present();
+    this.adminApi
+      .getDrivers({ search: query, page: 1, limit: 25, includeVendor: true })
+      .subscribe({
+        next: async (res) => {
+          await loader.dismiss().catch(() => undefined);
+          const raw = res?.drivers || [];
+          const qLower = query.toLowerCase();
+          const digitQ = query.replace(/\D/g, '');
+          let matches = raw;
+          if (query.includes('@')) {
+            matches = raw.filter(
+              (d: { email?: string }) => String(d?.email || '').toLowerCase() === qLower
+            );
+          } else if (digitQ.length >= 4) {
+            matches = raw.filter((d: { phone?: string }) =>
+              String(d?.phone || '')
+                .replace(/\D/g, '')
+                .includes(digitQ)
+            );
+          }
+          if (!matches.length) {
+            this.toastController
+              .create({ message: 'No drivers matched.', color: 'warning', duration: 2500 })
+              .then((t) => t.present());
+            return;
+          }
+          if (matches.length === 1) {
+            this.applyDriverFilter(matches[0]);
+            return;
+          }
+          const pick = await this.alertController.create({
+            header: 'Select driver',
+            message: 'Multiple matches:',
+            buttons: [
+              ...matches.slice(0, 10).map((d: { _id: string; name?: string; phone?: string }) => ({
+                text: `${d.name || 'Driver'} · ${d.phone || '—'}`,
+                handler: () => this.applyDriverFilter(d),
+              })),
+              { text: 'Cancel', role: 'cancel' },
+            ],
+          });
+          await pick.present();
+        },
+        error: async () => {
+          await loader.dismiss().catch(() => undefined);
+          this.toastController
+            .create({ message: 'Search failed', color: 'danger', duration: 2500 })
+            .then((t) => t.present());
+        },
+      });
+  }
+
+  private applyDriverFilter(d: { _id: string; name?: string; phone?: string }): void {
+    this.driverId = String(d._id);
+    this.driverFilterLabel = `${d.name || 'Driver'} · ${d.phone || '—'}`;
     this.onFilterChange();
   }
 

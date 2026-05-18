@@ -7,6 +7,16 @@ import {
   getVendorVerificationBadgeColor,
   getVendorVerificationLabel,
 } from '../../../../core/admin-vendor-status';
+import {
+  approvalBadgeColor,
+  approvalStatusLabel,
+} from '../../../../core/driver-approval';
+import {
+  missingDocLabel,
+  vehicleStatusBadgeColor,
+  vehicleStatusLabel,
+  workflowRoutedToLabel,
+} from '../../../../core/driver-detail-labels';
 
 @Component({
   selector: 'app-vendor-detail',
@@ -37,6 +47,13 @@ export class VendorDetailPage implements OnInit {
 
   verificationLabel = getVendorVerificationLabel;
   verificationBadgeColor = getVendorVerificationBadgeColor;
+
+  approvalLabel = approvalStatusLabel;
+  approvalColor = approvalBadgeColor;
+  vStatusLabel = vehicleStatusLabel;
+  vStatusColor = vehicleStatusBadgeColor;
+  missDocLabel = missingDocLabel;
+  wfRoutedLabel = workflowRoutedToLabel;
 
   constructor(
     private route: ActivatedRoute,
@@ -194,8 +211,10 @@ export class VendorDetailPage implements OnInit {
       });
   }
 
-  openDocument(url: string) {
-    window.open(url, '_blank');
+  openDocument(url: any) {
+    console.log('openDocument', url);
+    const documentUrl = url?.documentUrl || '';
+    window.open(url?.documentUrl || '', '_blank');
   }
 
   async verifyVendor() {
@@ -301,6 +320,20 @@ export class VendorDetailPage implements OnInit {
       return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
     return name.substring(0, 2).toUpperCase();
+  }
+
+  /** Compact active vehicle line for vendor driver tiles. */
+  driverVehicleLine(d: { vehicleInfo?: Record<string, unknown> | null }): string | null {
+    const vi = d?.vehicleInfo;
+    if (!vi || typeof vi !== 'object') return null;
+    const make = String(vi['make'] || '').trim();
+    const model = String(vi['model'] || '').trim();
+    const plate = String(vi['licensePlate'] || '').trim();
+    const name = [make, model].filter(Boolean).join(' ').trim();
+    if (name && plate) return `${name} · ${plate}`;
+    if (name) return name;
+    if (plate) return plate;
+    return null;
   }
 
   async showToast(message: string, color: string) {

@@ -4,6 +4,9 @@
       <ion-back-button defaultHref="/folder/drivers" text="Drivers"></ion-back-button>
     </ion-buttons>
     <ion-title>{{ driver?.name || 'Driver profile' }}</ion-title>
+    <ion-buttons slot="end">
+      <app-admin-notifications-toolbar-button />
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -14,7 +17,8 @@
       <div class="hero-layout">
         <div class="hero-identity">
           <div class="hero-avatar" aria-hidden="true">
-            <ion-icon name="person"></ion-icon>
+            <img *ngIf="driver.profilePic" [src]="assetUrl(driver.profilePic)" alt="" class="hero-avatar-img" />
+            <ion-icon *ngIf="!driver.profilePic" name="person"></ion-icon>
           </div>
           <div>
             <h1 class="hero-name">{{ driver.name }}</h1>
@@ -114,7 +118,7 @@
             <dt>Vendor email</dt>
             <dd><a [href]="'mailto:' + v['email']" class="contact-link">{{ v['email'] }}</a></dd>
           </div>
-          <div class="detail-row" *ngIf="v['address']" class="wrap-row">
+          <div class="detail-row" *ngIf="v['address']">
             <dt>Address</dt>
             <dd class="wrap">{{ v['address'] }}</dd>
           </div>
@@ -169,6 +173,9 @@
         <ion-badge [color]="vStatusColor(driver.pendingVehicleInfo.approvalStatus)">{{ vStatusLabel(driver.pendingVehicleInfo.approvalStatus) }}</ion-badge>
         <span *ngIf="driver.pendingVehicleInfo.approvalRoutedTo" class="ion-margin-start">· {{ wfRoutedLabel(driver.pendingVehicleInfo.approvalRoutedTo) }}</span>
       </p>
+      <ion-note *ngIf="driver.pendingVehicleInfo?.approvalStatus === 'UNDER_APPROVAL'" class="ion-margin-bottom block-note">
+        Latest submission, including any documents re-uploaded after a rejection, is shown below.
+      </ion-note>
       <dl class="detail-dl">
         <div class="detail-row" *ngIf="driver.pendingVehicleInfo.make || driver.pendingVehicleInfo.model">
           <dt>Vehicle</dt>
@@ -177,6 +184,10 @@
         <div class="detail-row" *ngIf="driver.pendingVehicleInfo.licensePlate">
           <dt>Plate</dt>
           <dd>{{ driver.pendingVehicleInfo.licensePlate }}</dd>
+        </div>
+        <div class="detail-row" *ngIf="driver.pendingVehicleInfo.submittedAt">
+          <dt>Submitted</dt>
+          <dd>{{ driver.pendingVehicleInfo.submittedAt | date:'medium' }}</dd>
         </div>
         <div class="detail-row" *ngIf="driver.pendingVehicleInfo.rejectionReason">
           <dt>Rejection reason</dt>
@@ -220,10 +231,6 @@
           <ion-input formControlName="aadhaarNumber" inputmode="numeric"></ion-input>
         </ion-item>
         <ion-item lines="full" class="compliance-field">
-          <ion-label position="stacked">Aadhaar expiry (optional)</ion-label>
-          <ion-input formControlName="aadhaarExpiry" type="date"></ion-input>
-        </ion-item>
-        <ion-item lines="full" class="compliance-field">
           <ion-label position="stacked">Driving licence number</ion-label>
           <ion-input formControlName="dlNumber"></ion-input>
         </ion-item>
@@ -234,10 +241,6 @@
         <ion-item lines="full" class="compliance-field">
           <ion-label position="stacked">PAN</ion-label>
           <ion-input formControlName="panNumber"></ion-input>
-        </ion-item>
-        <ion-item lines="full" class="compliance-field">
-          <ion-label position="stacked">PAN expiry (optional)</ion-label>
-          <ion-input formControlName="panExpiry" type="date"></ion-input>
         </ion-item>
         <div class="compliance-actions">
           <ion-button color="primary" (click)="saveCompliance()" [disabled]="savingCompliance || complianceForm.invalid">

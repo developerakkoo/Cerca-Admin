@@ -1,0 +1,59 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Notifications</ion-title>
+    <ion-buttons slot="end">
+      <app-admin-notifications-toolbar-button />
+      <ion-button fill="clear" (click)="markAllRead()" [disabled]="isLoading || !notifications.length">
+        <ion-icon name="checkmark-done-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="notifications-content">
+  <ion-refresher slot="fixed" (ionRefresh)="load($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div *ngIf="error" class="ion-padding">
+    <ion-text color="danger">{{ error }}</ion-text>
+    <ion-button expand="block" fill="outline" (click)="load()">Retry</ion-button>
+  </div>
+
+  <ion-list *ngIf="!error" lines="full">
+    <ion-item
+      *ngFor="let n of notifications"
+      button
+      detail="true"
+      [class.unread]="!n.isRead"
+      (click)="openNotification(n)"
+    >
+      <ion-icon
+        name="notifications-outline"
+        slot="start"
+        [color]="n.isRead ? 'medium' : 'primary'"
+      ></ion-icon>
+      <ion-label>
+        <h2>{{ n.title }}</h2>
+        <p>{{ n.message }}</p>
+        <p class="notification-meta">{{ n.type }} · {{ n.createdAt | date: 'short' }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <div *ngIf="!isLoading && !error && notifications.length === 0" class="empty-hint">
+    <ion-icon name="notifications-off-outline" size="large" color="medium"></ion-icon>
+    <p>No notifications yet.</p>
+  </div>
+
+  <ion-infinite-scroll
+    *ngIf="notifications.length > 0 && hasMore"
+    threshold="120px"
+    (ionInfinite)="loadMore($event)"
+  >
+    <ion-infinite-scroll-content loadingSpinner="crescent"></ion-infinite-scroll-content>
+  </ion-infinite-scroll>
+</ion-content>

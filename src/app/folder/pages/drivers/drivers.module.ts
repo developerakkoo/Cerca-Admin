@@ -8,6 +8,7 @@ import { DriversPageRoutingModule } from './drivers-routing.module';
 
 import { DriversPage } from './drivers.page';
 import { DriverDetailPage } from './driver-detail/driver-detail.page';
+import { AdminNotificationsToolbarButtonComponent } from '../../../components/admin-notifications-toolbar-button/admin-notifications-toolbar-button.component';
 
 @NgModule({
   imports: [
@@ -15,7 +16,8 @@ import { DriverDetailPage } from './driver-detail/driver-detail.page';
     FormsModule,
     ReactiveFormsModule,
     IonicModule,
-    DriversPageRoutingModule
+    DriversPageRoutingModule,
+    AdminNotificationsToolbarButtonComponent,
   ],
   declarations: [DriversPage, DriverDetailPage]
 })

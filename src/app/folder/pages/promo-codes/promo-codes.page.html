@@ -2,6 +2,7 @@
   <ion-toolbar>
     <ion-title>Promo Codes</ion-title>
     <ion-buttons slot="end">
+      <app-admin-notifications-toolbar-button />
       <ion-button (click)="openCreateForm()" *ngIf="!showForm">
         <ion-icon name="add" slot="start"></ion-icon>
         Create Promo Code

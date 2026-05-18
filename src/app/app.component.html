@@ -1,4 +1,53 @@
 <ion-app>
+  @if (dashboardStackItems.length > 0) {
+    <div class="admin-notif-stack-host" aria-live="polite">
+      <div
+        class="admin-notif-stack-inner"
+        [style.paddingTop.px]="visibleStackItems.length > 1 ? 8 + 10 * stackCardDepth(0) : 0"
+        [style.minHeight.px]="stackInnerMinHeightPx"
+      >
+        @for (n of reversedVisibleStack(); track n.id; let idx = $index) {
+          <div
+            class="admin-notif-card"
+            [class.admin-notif-card--primary]="n.variant === 'primary'"
+            [class.admin-notif-card--warning]="n.variant === 'warning'"
+            [class.admin-notif-card--danger]="n.variant === 'danger'"
+            [style.zIndex]="20 + idx"
+            [ngStyle]="{
+              transform:
+                'translateY(' + -10 * stackCardDepth(idx) + 'px) scale(' + (1 - 0.016 * stackCardDepth(idx)) + ')',
+            }"
+            role="button"
+            tabindex="0"
+            (click)="openDashboardNotificationPath(n.path)"
+            (keydown.enter)="openDashboardNotificationPath(n.path)"
+            (keydown.space)="$event.preventDefault(); openDashboardNotificationPath(n.path)"
+          >
+            <div class="admin-notif-card__body">
+              <h3 class="admin-notif-card__title">{{ n.title }}</h3>
+              <p class="admin-notif-card__message">{{ n.message }}</p>
+            </div>
+            <button
+              type="button"
+              class="admin-notif-card__close"
+              aria-label="Dismiss notification"
+              (click)="dismissDashboardNotification(n.id, $event)"
+            >
+              <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+            </button>
+          </div>
+        }
+      </div>
+      @if (stackOverflowCount > 0) {
+        <div class="admin-notif-stack-footer">
+          <span class="admin-notif-stack-footer__more">+{{ stackOverflowCount }} more</span>
+          <ion-button size="small" fill="solid" (click)="viewAllDashboardNotifications()">
+            View all
+          </ion-button>
+        </div>
+      }
+    </div>
+  }
   <ion-split-pane contentId="main-content">
     <ion-menu contentId="main-content" type="overlay">
       <ion-content>

@@ -4,6 +4,9 @@
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
     <ion-title>Users</ion-title>
+    <ion-buttons slot="end">
+      <app-admin-notifications-toolbar-button />
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -231,12 +234,12 @@
 
           <ion-item class="form-item">
             <ion-label position="stacked">Email *</ion-label>
-            <ion-input type="email" [(ngModel)]="editFormData.email" placeholder="Enter email"></ion-input>
+            <ion-input type="email" maxlength="254" [(ngModel)]="editFormData.email" placeholder="Enter email"></ion-input>
           </ion-item>
 
           <ion-item class="form-item">
             <ion-label position="stacked">Phone Number</ion-label>
-            <ion-input type="tel" [(ngModel)]="editFormData.phoneNumber" placeholder="Enter phone number"></ion-input>
+            <ion-input type="tel" inputmode="numeric" [(ngModel)]="editFormData.phoneNumber" appDigitsOnlyPhone="digits" placeholder="Enter phone number"></ion-input>
           </ion-item>
 
           <div class="modal-actions">

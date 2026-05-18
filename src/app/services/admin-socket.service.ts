@@ -10,6 +10,18 @@ export interface ConnectionStatus {
   error?: string
 }
 
+export interface AdminRegistrationAlertPayload {
+  kind?: string
+  type?: string
+  title?: string
+  message?: string
+  entityId?: string
+  path?: string
+  notificationId?: string
+  data?: Record<string, unknown>
+  createdAt?: string
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -199,6 +211,13 @@ export class AdminSocketService {
    */
   onEmergencyAlert(): Observable<any> {
     return this.on<any>('emergencyAlert')
+  }
+
+  /**
+   * New driver / vendor / vehicle registration or approval-queue events for admins.
+   */
+  onAdminRegistrationAlert(): Observable<AdminRegistrationAlertPayload> {
+    return this.on<AdminRegistrationAlertPayload>('adminRegistrationAlert')
   }
 
   /**

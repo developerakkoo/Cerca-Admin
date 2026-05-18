@@ -43,7 +43,8 @@ export class SettingsPage implements OnInit {
               driverCommissions: 0
             },
             services: [],
-            vehicleServices: this.getDefaultVehicleServices()
+            vehicleServices: this.getDefaultVehicleServices(),
+            rideMatching: this.getDefaultRideMatching()
           };
         } else {
           this.settings = {
@@ -52,14 +53,12 @@ export class SettingsPage implements OnInit {
               maintenanceMode: false,
               forceUpdate: false
             },
-            pricingConfigurations: data.pricingConfigurations || {
-              perKmRate: 0,
-              minimumFare: 0,
-              platformFees: 0,
-              driverCommissions: 0
-            },
+            pricingConfigurations: this.mergePricingConfigurations(
+              data.pricingConfigurations
+            ),
             services: data.services || [],
-            vehicleServices: data.vehicleServices || this.getDefaultVehicleServices()
+            vehicleServices: data.vehicleServices || this.getDefaultVehicleServices(),
+            rideMatching: this.mergeRideMatching(data.rideMatching)
           };
         }
         this.isLoading = false;
@@ -82,7 +81,8 @@ export class SettingsPage implements OnInit {
               driverCommissions: 0
             },
             services: [],
-            vehicleServices: this.getDefaultVehicleServices()
+            vehicleServices: this.getDefaultVehicleServices(),
+            rideMatching: this.getDefaultRideMatching()
           };
         } else {
           const alert = await this.alertController.create({
@@ -146,26 +146,110 @@ export class SettingsPage implements OnInit {
     });
   }
 
+  getDefaultFarePricing(perKmRate = 12) {
+    const rate = Number(perKmRate) || 12;
+    return {
+      enabled: false,
+      timezone: 'Asia/Kolkata',
+      distanceTiers: {
+        tier1: { maxKm: 10, ratePerKm: rate },
+        tier2: { maxKm: 20, ratePerKm: rate },
+        tier3: { maxKm: 30, ratePerKm: rate },
+        beyondTier3RatePerKm: rate,
+      },
+      timeBands: [
+        { id: 'morning', label: 'Morning peak', start: '06:00', end: '10:00', multiplier: 1.2 },
+        { id: 'day', label: 'Day', start: '10:00', end: '17:00', multiplier: 1.0 },
+        { id: 'evening', label: 'Evening peak', start: '17:00', end: '22:00', multiplier: 1.5 },
+        { id: 'night', label: 'Night', start: '22:00', end: '06:00', multiplier: 1.8 },
+      ],
+      timeMultiplierAppliesTo: 'distanceAndTime',
+    };
+  }
+
+  mergePricingConfigurations(pc: any) {
+    const base = pc || {
+      baseFare: 0,
+      perKmRate: 12,
+      minimumFare: 0,
+      platformFees: 0,
+      driverCommissions: 0,
+      cancellationFees: 0,
+    };
+    const perKm = Number(base.perKmRate) || 12;
+    const farePricing = base.farePricing
+      ? {
+          ...this.getDefaultFarePricing(perKm),
+          ...base.farePricing,
+          distanceTiers: {
+            ...this.getDefaultFarePricing(perKm).distanceTiers,
+            ...(base.farePricing.distanceTiers || {}),
+            tier1: {
+              ...this.getDefaultFarePricing(perKm).distanceTiers.tier1,
+              ...(base.farePricing.distanceTiers?.tier1 || {}),
+            },
+            tier2: {
+              ...this.getDefaultFarePricing(perKm).distanceTiers.tier2,
+              ...(base.farePricing.distanceTiers?.tier2 || {}),
+            },
+            tier3: {
+              ...this.getDefaultFarePricing(perKm).distanceTiers.tier3,
+              ...(base.farePricing.distanceTiers?.tier3 || {}),
+            },
+          },
+          timeBands:
+            Array.isArray(base.farePricing.timeBands) &&
+            base.farePricing.timeBands.length
+              ? base.farePricing.timeBands
+              : this.getDefaultFarePricing(perKm).timeBands,
+        }
+      : this.getDefaultFarePricing(perKm);
+    return { ...base, farePricing };
+  }
+
+  getDefaultRideMatching() {
+    return {
+      destinationReachRadiusMeters: 1500,
+      stackedAccept: { enabled: true }
+    };
+  }
+
+  mergeRideMatching(rideMatching: any) {
+    const defaults = this.getDefaultRideMatching();
+    if (!rideMatching) return defaults;
+    return {
+      destinationReachRadiusMeters:
+        rideMatching.destinationReachRadiusMeters ??
+        defaults.destinationReachRadiusMeters,
+      stackedAccept: {
+        enabled:
+          rideMatching.stackedAccept?.enabled !== undefined
+            ? rideMatching.stackedAccept.enabled
+            : defaults.stackedAccept.enabled
+      }
+    };
+  }
+
   getDefaultVehicleServices() {
     return {
-      cercaSmall: {
-        name: 'Cerca Small',
+      cercaZip: {
+        name: 'Cerca Zip',
         price: 299,
         perMinuteRate: 2,
         seats: 4,
         enabled: true,
         imagePath: 'assets/cars/cerca-small.png'
       },
-      cercaMedium: {
-        name: 'Cerca Medium',
+      cercaGlide: {
+        name: 'Cerca Glide',
         price: 499,
         perMinuteRate: 3,
         seats: 6,
         enabled: true,
         imagePath: 'assets/cars/Cerca-medium.png'
       },
-      cercaLarge: {
-        name: 'Cerca Large',
+      cercaTitan: {
+        name: 'Cerca Titan',
         price: 699,
         perMinuteRate: 4,
         seats: 8,
@@ -180,49 +264,49 @@ export class SettingsPage implements OnInit {
 
     const vs = this.settings.vehicleServices;
 
-    // Validate Cerca Small
-    if (vs.cercaSmall?.enabled) {
-      if (vs.cercaSmall.price === undefined || vs.cercaSmall.price < 0) {
-        return 'Cerca Small price must be a positive number';
+    // Validate Cerca Zip
+    if (vs.cercaZip?.enabled) {
+      if (vs.cercaZip.price === undefined || vs.cercaZip.price < 0) {
+        return 'Cerca Zip price must be a positive number';
       }
-      if (vs.cercaSmall.perMinuteRate === undefined || vs.cercaSmall.perMinuteRate === null || vs.cercaSmall.perMinuteRate < 0) {
-        return 'Cerca Small per minute rate must be a positive number';
+      if (vs.cercaZip.perMinuteRate === undefined || vs.cercaZip.perMinuteRate === null || vs.cercaZip.perMinuteRate < 0) {
+        return 'Cerca Zip per minute rate must be a positive number';
       }
-      if (vs.cercaSmall.seats === undefined || vs.cercaSmall.seats < 1) {
-        return 'Cerca Small seats must be at least 1';
-      }
-    }
-
-    // Validate Cerca Medium
-    if (vs.cercaMedium?.enabled) {
-      if (vs.cercaMedium.price === undefined || vs.cercaMedium.price < 0) {
-        return 'Cerca Medium price must be a positive number';
-      }
-      if (vs.cercaMedium.perMinuteRate === undefined || vs.cercaMedium.perMinuteRate === null || vs.cercaMedium.perMinuteRate < 0) {
-        return 'Cerca Medium per minute rate must be a positive number';
-      }
-      if (vs.cercaMedium.seats === undefined || vs.cercaMedium.seats < 1) {
-        return 'Cerca Medium seats must be at least 1';
+      if (vs.cercaZip.seats === undefined || vs.cercaZip.seats < 1) {
+        return 'Cerca Zip seats must be at least 1';
       }
     }
 
-    // Validate Cerca Large
-    if (vs.cercaLarge?.enabled) {
-      if (vs.cercaLarge.price === undefined || vs.cercaLarge.price < 0) {
-        return 'Cerca Large price must be a positive number';
+    // Validate Cerca Glide
+    if (vs.cercaGlide?.enabled) {
+      if (vs.cercaGlide.price === undefined || vs.cercaGlide.price < 0) {
+        return 'Cerca Glide price must be a positive number';
       }
-      if (vs.cercaLarge.perMinuteRate === undefined || vs.cercaLarge.perMinuteRate === null || vs.cercaLarge.perMinuteRate < 0) {
-        return 'Cerca Large per minute rate must be a positive number';
+      if (vs.cercaGlide.perMinuteRate === undefined || vs.cercaGlide.perMinuteRate === null || vs.cercaGlide.perMinuteRate < 0) {
+        return 'Cerca Glide per minute rate must be a positive number';
       }
-      if (vs.cercaLarge.seats === undefined || vs.cercaLarge.seats < 1) {
-        return 'Cerca Large seats must be at least 1';
+      if (vs.cercaGlide.seats === undefined || vs.cercaGlide.seats < 1) {
+        return 'Cerca Glide seats must be at least 1';
+      }
+    }
+
+    // Validate Cerca Titan
+    if (vs.cercaTitan?.enabled) {
+      if (vs.cercaTitan.price === undefined || vs.cercaTitan.price < 0) {
+        return 'Cerca Titan price must be a positive number';
+      }
+      if (vs.cercaTitan.perMinuteRate === undefined || vs.cercaTitan.perMinuteRate === null || vs.cercaTitan.perMinuteRate < 0) {
+        return 'Cerca Titan per minute rate must be a positive number';
+      }
+      if (vs.cercaTitan.seats === undefined || vs.cercaTitan.seats < 1) {
+        return 'Cerca Titan seats must be at least 1';
       }
     }
 
     return null;
   }
 
-  onVehicleServiceToggle(serviceType: 'cercaSmall' | 'cercaMedium' | 'cercaLarge') {
+  onVehicleServiceToggle(serviceType: 'cercaZip' | 'cercaGlide' | 'cercaTitan') {
     // Ensure vehicle services structure exists
     if (!this.settings.vehicleServices) {
       this.settings.vehicleServices = this.getDefaultVehicleServices();

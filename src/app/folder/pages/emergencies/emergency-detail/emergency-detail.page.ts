@@ -102,10 +102,19 @@ export class EmergencyDetailPage implements OnInit, OnDestroy {
     return t.fullName || t.name || t.email || 'Unknown';
   }
 
-  getRideId(): string {
+  /** Human-readable ride context — no MongoDB id. */
+  getRideSummary(): string {
     const ride = this.emergency?.ride;
-    if (!ride) return 'N/A';
-    return typeof ride === 'object' ? ride._id : ride;
+    if (!ride) return '—';
+    if (typeof ride === 'object') {
+      const parts = [
+        ride.pickupAddress,
+        ride.status,
+        ride.rider?.fullName || ride.rider?.name,
+      ].filter(Boolean);
+      return parts.length ? String(parts[0]) : 'Linked ride';
+    }
+    return '—';
   }
 
   async resolve() {

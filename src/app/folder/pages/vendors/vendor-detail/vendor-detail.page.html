@@ -4,6 +4,9 @@
       <ion-back-button defaultHref="/folder/vendors"></ion-back-button>
     </ion-buttons>
     <ion-title>Vendor</ion-title>
+    <ion-buttons slot="end">
+      <app-admin-notifications-toolbar-button />
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -182,6 +185,34 @@
                           </ion-chip>
                           <ion-chip size="small" [color]="d.isOnline ? 'tertiary' : 'medium'" *ngIf="d.isOnline !== undefined">
                             {{ d.isOnline ? 'Online' : 'Offline' }}
+                          </ion-chip>
+                        </div>
+                        <div class="driver-tile-badges" *ngIf="d.approvalStatus || d.vehicleStatus">
+                          <ion-badge *ngIf="d.approvalStatus" [color]="approvalColor(d.approvalStatus)">
+                            {{ approvalLabel(d.approvalStatus) }}
+                          </ion-badge>
+                          <ion-badge *ngIf="d.vehicleStatus" [color]="vStatusColor(d.vehicleStatus)">
+                            Vehicle: {{ vStatusLabel(d.vehicleStatus) }}
+                          </ion-badge>
+                          <ion-chip *ngIf="d.isPriorityDriver" size="small" color="tertiary">Priority driver</ion-chip>
+                        </div>
+                        <p class="driver-tile-rating" *ngIf="d.rating != null">
+                          Rating <strong>{{ d.rating | number:'1.1-2' }}</strong>
+                          <span *ngIf="d.totalRatings != null" class="driver-tile-rating-meta">({{ d.totalRatings }} reviews)</span>
+                        </p>
+                        <p class="driver-tile-vehicle" *ngIf="driverVehicleLine(d) as vehLine">
+                          <ion-icon name="car-sport-outline" aria-hidden="true"></ion-icon>
+                          {{ vehLine }}
+                        </p>
+                        <div class="driver-tile-missing" *ngIf="d.missingDocuments?.length">
+                          <span class="driver-tile-missing-label">Missing for approval</span>
+                          <div class="driver-tile-missing-badges">
+                            <ion-badge color="warning" *ngFor="let m of d.missingDocuments">{{ missDocLabel(m) }}</ion-badge>
+                          </div>
+                        </div>
+                        <div class="driver-tile-pending-vehicle" *ngIf="d.pendingVehicleInfo?.approvalStatus === 'UNDER_APPROVAL'">
+                          <ion-chip size="small" color="warning">
+                            Vehicle under review · {{ wfRoutedLabel(d.pendingVehicleInfo.approvalRoutedTo) }}
                           </ion-chip>
                         </div>
                         <p class="driver-tile-earnings" *ngIf="d.totalEarnings !== undefined">

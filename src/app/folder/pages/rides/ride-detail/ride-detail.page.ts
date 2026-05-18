@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AlertController, ToastController } from '@ionic/angular';
+import { AlertController, LoadingController, ToastController } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { AdminApiService } from '../../../../services/admin-api.service';
@@ -41,7 +41,8 @@ export class RideDetailPage implements OnInit, OnDestroy {
     private adminApi: AdminApiService,
     private socketService: AdminSocketService,
     private alertController: AlertController,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private loadingController: LoadingController
   ) {}
 
   ngOnInit() {
@@ -148,6 +149,59 @@ export class RideDetailPage implements OnInit, OnDestroy {
       }
     });
     this.subs.push(cancelledSub);
+
+    const destSub = this.socketService.on<any>('rideDestinationUpdated').subscribe((data: any) => {
+      const rid = data?.ride?._id;
+      if (!rid || String(rid) !== String(rideId)) return;
+      if (data?.ride) {
+        this.ride = { ...this.ride, ...data.ride };
+        this.refreshDropoffMarkerAndBounds();
+        void this.loadTimeline();
+        this.toastController
+          .create({
+            message: 'Drop-off or fare updated',
+            duration: 2500,
+            color: 'primary',
+            position: 'bottom',
+          })
+          .then(t => t.present());
+      }
+    });
+    this.subs.push(destSub);
+  }
+
+  private refreshDropoffMarkerAndBounds() {
+    const dropoff = this.getDropoffCoords();
+    const pickup = this.getPickupCoords();
+    const w = window as any;
+    if (!this.map || !w.google?.maps || !dropoff) return;
+    const google = w.google;
+
+    if (this.dropoffMarker) {
+      this.dropoffMarker.setPosition(dropoff);
+    } else {
+      this.dropoffMarker = new google.maps.Marker({
+        position: dropoff,
+        map: this.map,
+        title: 'Dropoff',
+        label: { text: 'D', color: 'white', fontWeight: 'bold' },
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 10,
+          fillColor: '#c5000f',
+          fillOpacity: 1,
+          strokeColor: 'white',
+          strokeWeight: 2,
+        },
+      });
+    }
+
+    if (pickup && dropoff) {
+      const bounds = new google.maps.LatLngBounds();
+      bounds.extend(pickup);
+      bounds.extend(dropoff);
+      this.map.fitBounds(bounds);
+    }
   }
 
   /**
@@ -348,37 +402,113 @@ export class RideDetailPage implements OnInit, OnDestroy {
   async assignDriver() {
     if (!this.rideId) return;
     const alert = await this.alertController.create({
-      header: 'Assign Driver',
-      message: 'Enter driver ID (MongoDB ObjectId):',
-      inputs: [{ name: 'driverId', type: 'text', placeholder: 'Driver ID' }],
+      header: 'Assign driver',
+      message: 'Search by driver phone number or email:',
+      inputs: [{ name: 'query', type: 'text', placeholder: 'Phone or email' }],
       buttons: [
         { text: 'Cancel', role: 'cancel' },
         {
-          text: 'Assign',
+          text: 'Search',
           handler: (data) => {
-            const driverId = data?.driverId?.trim();
-            if (!driverId) {
-              this.toastController.create({ message: 'Driver ID required', color: 'warning', duration: 2000 }).then(t => t.present());
-              return;
+            const q = String(data?.query ?? '').trim();
+            if (!q) {
+              this.toastController
+                .create({ message: 'Enter phone or email', color: 'warning', duration: 2000 })
+                .then((t) => t.present());
+              return false;
             }
-            this.adminApi.assignDriver(this.rideId!, driverId).subscribe({
-              next: () => {
-                this.loadRide();
-                this.toastController.create({ message: 'Driver assigned', color: 'success', duration: 2000 }).then(t => t.present());
-              },
-              error: (err) => {
-                this.toastController.create({
-                  message: err?.error?.message || 'Failed to assign driver',
-                  color: 'danger',
-                  duration: 3000,
-                }).then(t => t.present());
-              },
-            });
+            void this.searchDriversAndAssign(q);
+            return true;
           },
         },
       ],
     });
     await alert.present();
+  }
+
+  private async searchDriversAndAssign(query: string): Promise<void> {
+    const loader = await this.loadingController.create({ message: 'Searching drivers…' });
+    await loader.present();
+    this.adminApi
+      .getDrivers({
+        search: query,
+        page: 1,
+        limit: 25,
+        includeVendor: true,
+      })
+      .subscribe({
+        next: async (res) => {
+          await loader.dismiss().catch(() => undefined);
+          const raw = res?.drivers || [];
+          const qLower = query.toLowerCase();
+          const digitQ = query.replace(/\D/g, '');
+          let matches = raw;
+          if (query.includes('@')) {
+            matches = raw.filter(
+              (d: { email?: string }) => String(d?.email || '').toLowerCase() === qLower
+            );
+          } else if (digitQ.length >= 4) {
+            matches = raw.filter((d: { phone?: string }) =>
+              String(d?.phone || '')
+                .replace(/\D/g, '')
+                .includes(digitQ)
+            );
+          }
+          if (!matches.length) {
+            this.toastController
+              .create({
+                message: 'No drivers matched. Try another phone or email.',
+                color: 'warning',
+                duration: 3000,
+              })
+              .then((t) => t.present());
+            return;
+          }
+          if (matches.length === 1) {
+            this.doAssignDriver(matches[0]._id);
+            return;
+          }
+          const pick = await this.alertController.create({
+            header: 'Select driver',
+            message: 'Multiple matches — choose one:',
+            buttons: [
+              ...matches.slice(0, 8).map((d: { _id: string; name?: string; phone?: string }) => ({
+                text: `${d.name || 'Driver'} · ${d.phone || '—'}`,
+                handler: () => {
+                  this.doAssignDriver(d._id);
+                },
+              })),
+              { text: 'Cancel', role: 'cancel' },
+            ],
+          });
+          await pick.present();
+        },
+        error: async () => {
+          await loader.dismiss().catch(() => undefined);
+          this.toastController
+            .create({ message: 'Driver search failed', color: 'danger', duration: 2500 })
+            .then((t) => t.present());
+        },
+      });
+  }
+
+  private doAssignDriver(driverId: string): void {
+    if (!this.rideId || !driverId) return;
+    this.adminApi.assignDriver(this.rideId, driverId).subscribe({
+      next: () => {
+        this.loadRide();
+        this.toastController.create({ message: 'Driver assigned', color: 'success', duration: 2000 }).then((t) => t.present());
+      },
+      error: (err) => {
+        this.toastController
+          .create({
+            message: err?.error?.message || 'Failed to assign driver',
+            color: 'danger',
+            duration: 3000,
+          })
+          .then((t) => t.present());
+      },
+    });
   }
 
   back() {

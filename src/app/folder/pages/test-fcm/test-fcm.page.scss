@@ -1,0 +1,111 @@
+.test-fcm-content {
+  --background: var(--ion-color-light, #f6f7fb);
+}
+
+.test-fcm-grid {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  grid-template-columns: minmax(0, 1fr);
+
+  @media (min-width: 1024px) {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: start;
+  }
+}
+
+ion-card {
+  margin: 0;
+}
+
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.json-editor {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.empty-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 12px;
+  color: var(--ion-color-medium, #92949c);
+
+  p {
+    margin-top: 8px;
+    font-size: 14px;
+  }
+}
+
+.log-entry {
+  border: 1px solid var(--ion-color-step-100, #e6e6ea);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  background: var(--ion-color-step-50, #fafafc);
+
+  &[data-status='success'] {
+    border-color: rgba(45, 211, 111, 0.35);
+  }
+  &[data-status='partial'] {
+    border-color: rgba(255, 196, 9, 0.45);
+  }
+  &[data-status='error'] {
+    border-color: rgba(235, 68, 90, 0.45);
+  }
+
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .log-time {
+    font-weight: 600;
+    color: var(--ion-color-dark, #222428);
+  }
+
+  .log-meta {
+    font-size: 12px;
+    color: var(--ion-color-medium, #92949c);
+  }
+
+  .log-summary {
+    margin: 4px 0 8px;
+    font-size: 13px;
+    color: var(--ion-color-dark, #222428);
+  }
+
+  details {
+    summary {
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--ion-color-primary, #3880ff);
+      user-select: none;
+    }
+
+    pre {
+      margin: 8px 0 0;
+      padding: 10px 12px;
+      background: var(--ion-color-step-100, #f0f0f4);
+      border-radius: 6px;
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      max-height: 280px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  }
+}

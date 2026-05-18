@@ -5,6 +5,7 @@
     </ion-buttons>
     <ion-title>Support Chat</ion-title>
     <ion-buttons slot="end">
+      <app-admin-notifications-toolbar-button />
       <ion-button *ngIf="canResolve()" (click)="resolveIssue()" color="success">
         <ion-icon name="checkmark-circle-outline"></ion-icon>
       </ion-button>

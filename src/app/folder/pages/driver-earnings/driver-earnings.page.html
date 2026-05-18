@@ -5,6 +5,7 @@
     </ion-buttons>
     <ion-title>Driver Earnings</ion-title>
     <ion-buttons slot="end">
+      <app-admin-notifications-toolbar-button />
       <ion-button fill="outline" (click)="exportCsv()">Export CSV</ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -20,14 +21,17 @@
   <div class="earnings-container">
     <ion-card class="filter-card">
       <ion-card-content>
-        <div class="filter-row">
-          <ion-input
-            label="Driver ID"
-            labelPlacement="stacked"
-            placeholder="Filter by driver ID"
-            [(ngModel)]="driverId"
-            (ionChange)="onFilterChange()">
-          </ion-input>
+        <div class="filter-row filter-row-driver">
+          <div class="driver-filter-wrap">
+            <ion-label class="filter-stacked-label">Driver</ion-label>
+            <div class="driver-filter-actions">
+              <ion-button size="small" fill="outline" (click)="openDriverFilterPicker()">Search driver</ion-button>
+              <ion-chip *ngIf="driverId" color="primary">
+                <ion-label>{{ driverFilterLabel }}</ion-label>
+                <ion-icon name="close-circle" (click)="clearDriverFilter()"></ion-icon>
+              </ion-chip>
+            </div>
+          </div>
           <ion-select
             label="Status"
             labelPlacement="stacked"
@@ -57,6 +61,30 @@
           </ion-input>
           <ion-button fill="clear" (click)="resetFilters()">Reset</ion-button>
         </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="filter-card">
+      <ion-card-header>
+        <ion-card-title>Cash receivables (platform fee from drivers)</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-button size="small" fill="outline" (click)="loadCashReceivables()" [disabled]="cashReceivablesLoading">
+          Refresh list
+        </ion-button>
+        <ion-spinner *ngIf="cashReceivablesLoading" name="crescent" class="ion-margin-start"></ion-spinner>
+        <ion-list *ngIf="!cashReceivablesLoading && cashReceivables.length === 0">
+          <ion-item lines="none"><ion-label>No outstanding cash platform fees.</ion-label></ion-item>
+        </ion-list>
+        <ion-list *ngIf="cashReceivables.length > 0">
+          <ion-item *ngFor="let row of cashReceivables">
+            <ion-label>
+              <h3>{{ row.driverName || 'Driver' }} · ₹{{ row.amountDue | number:'1.2-2' }}</h3>
+              <p>Ride {{ row.rideId }} · {{ row.rideDate | date:'short' }}</p>
+            </ion-label>
+            <ion-button slot="end" size="small" (click)="confirmCollectCash(row)">Collected</ion-button>
+          </ion-item>
+        </ion-list>
       </ion-card-content>
     </ion-card>
 

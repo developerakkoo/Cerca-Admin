@@ -1,0 +1,44 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Payment disputes</ion-title>
+    <ion-buttons slot="end">
+      <app-admin-notifications-toolbar-button />
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="stats-row" *ngIf="stats">
+    <ion-chip>Open: {{ stats.open || 0 }}</ion-chip>
+    <ion-chip color="warning">Review: {{ stats.underReview || 0 }}</ion-chip>
+    <ion-chip color="danger">Awaiting pay: {{ stats.awaitingPayment || 0 }}</ion-chip>
+  </div>
+
+  <ion-item>
+    <ion-label>Status filter</ion-label>
+    <ion-select [(ngModel)]="statusFilter" (ionChange)="load()">
+      <ion-select-option value="">All</ion-select-option>
+      <ion-select-option value="UNDER_REVIEW">Under review</ion-select-option>
+      <ion-select-option value="AWAITING_RIDER_PAYMENT">Awaiting payment</ion-select-option>
+      <ion-select-option value="OPEN">Open</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <ion-button fill="outline" size="small" (click)="reconcileGateway()">Reconcile Razorpay</ion-button>
+  <ion-button fill="clear" size="small" (click)="load()">Refresh</ion-button>
+
+  <ion-spinner *ngIf="isLoading"></ion-spinner>
+
+  <ion-list *ngIf="!isLoading">
+    <ion-item button *ngFor="let d of disputes" (click)="openDetail(d._id)">
+      <ion-label>
+        <h2>{{ d.issueType }}</h2>
+        <p>{{ d.status }} · ₹{{ d.paymentContext?.amountRemaining || 0 }}</p>
+        <p class="meta">Ride {{ d.rideId?._id || d.rideId }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+</ion-content>

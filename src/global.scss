@@ -37,3 +37,21 @@
 // @import "@ionic/angular/css/palettes/dark.system.css";
 
 @import "./theme/admin-list-pages.scss";
+
+/* Admin registration alerts (Ionic alert overlay — global) */
+.admin-registration-alert .alert-head {
+  font-weight: 700;
+}
+
+.admin-registration-alert .alert-message {
+  white-space: pre-wrap;
+}
+
+/* Payout detail alert (View on driver/vendor payouts — multiline, no HTML in message) */
+.payout-view-alert .alert-head {
+  font-weight: 700;
+}
+
+.payout-view-alert .alert-message {
+  white-space: pre-wrap;
+}

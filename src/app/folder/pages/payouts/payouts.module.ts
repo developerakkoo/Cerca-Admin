@@ -5,13 +5,15 @@ import { IonicModule } from '@ionic/angular';
 
 import { PayoutsPageRoutingModule } from './payouts-routing.module';
 import { PayoutsPage } from './payouts.page';
+import { AdminNotificationsToolbarButtonComponent } from '../../../components/admin-notifications-toolbar-button/admin-notifications-toolbar-button.component';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    PayoutsPageRoutingModule
+    PayoutsPageRoutingModule,
+    AdminNotificationsToolbarButtonComponent,
   ],
   declarations: [PayoutsPage]
 })

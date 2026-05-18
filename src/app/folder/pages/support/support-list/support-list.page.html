@@ -4,6 +4,9 @@
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
     <ion-title>Support Chat</ion-title>
+    <ion-buttons slot="end">
+      <app-admin-notifications-toolbar-button />
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -43,7 +46,6 @@
               <p class="issue-user" *ngIf="issue.userId">
                 User: {{ getUserDisplayName(issue) }}
               </p>
-              <p class="issue-id">ID: {{ issue._id }}</p>
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">

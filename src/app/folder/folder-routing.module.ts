@@ -58,12 +58,34 @@ const routes: Routes = [
     loadChildren: () => import('./pages/support/support-list/support-list.module').then( m => m.SupportListPageModule)
   },
   {
+    path: 'payment-disputes',
+    loadChildren: () =>
+      import('./pages/payment-disputes/payment-disputes.module').then(
+        (m) => m.PaymentDisputesPageModule
+      ),
+  },
+  {
+    path: 'payment-disputes/:id',
+    loadChildren: () =>
+      import('./pages/payment-disputes/payment-dispute-detail.module').then(
+        (m) => m.PaymentDisputeDetailPageModule
+      ),
+  },
+  {
     path: 'support/:issueId',
     loadChildren: () => import('./pages/support/support-chat/support-chat.module').then( m => m.SupportChatPageModule)
   },
   {
     path: 'emergencies',
     loadChildren: () => import('./pages/emergencies/emergencies.module').then( m => m.EmergenciesPageModule)
+  },
+  {
+    path: 'notifications',
+    loadChildren: () => import('./pages/notifications/notifications.module').then( m => m.NotificationsPageModule)
+  },
+  {
+    path: 'test/fcm',
+    loadChildren: () => import('./pages/test-fcm/test-fcm.module').then( m => m.TestFcmPageModule)
   },
   {
     path: '**',

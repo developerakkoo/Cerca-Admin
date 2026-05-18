@@ -153,3 +153,132 @@ ion-note {
 ion-item.selected {
   --color: var(--ion-color-primary);
 }
+
+/* --- Dashboard socket notification stack (app shell) --- */
+.admin-notif-stack-host {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top, 0px));
+  right: max(12px, env(safe-area-inset-right, 0px));
+  z-index: 20000;
+  width: min(360px, calc(100vw - 24px));
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.admin-notif-stack-inner {
+  position: relative;
+  pointer-events: auto;
+}
+
+.admin-notif-card {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 12px 12px 14px;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.07),
+    0 12px 24px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--ion-color-step-150, #d7d8da);
+  background: var(--ion-background-color, #fff);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  transform-origin: top center;
+}
+
+.admin-notif-card:focus-visible {
+  outline: 2px solid var(--ion-color-primary);
+  outline-offset: 2px;
+}
+
+.admin-notif-card--primary {
+  border-left: 4px solid var(--ion-color-primary);
+}
+
+.admin-notif-card--warning {
+  border-left: 4px solid var(--ion-color-warning);
+}
+
+.admin-notif-card--danger {
+  border-left: 4px solid var(--ion-color-danger);
+}
+
+.admin-notif-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-notif-card__title {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ion-text-color, #1a1a1a);
+  line-height: 1.25;
+}
+
+.admin-notif-card__message {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ion-color-step-600, #666);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.admin-notif-card__close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin: -6px -6px -6px 0;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ion-color-medium, #666);
+  cursor: pointer;
+}
+
+.admin-notif-card__close:hover {
+  background: var(--ion-color-step-100, #f0f0f0);
+  color: var(--ion-text-color);
+}
+
+.admin-notif-card__close ion-icon {
+  font-size: 22px;
+  pointer-events: none;
+}
+
+.admin-notif-stack-footer {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--ion-color-step-50, #f4f5f8);
+  border: 1px solid var(--ion-color-step-150, #d7d8da);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.admin-notif-stack-footer__more {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ion-color-step-650, #555);
+}

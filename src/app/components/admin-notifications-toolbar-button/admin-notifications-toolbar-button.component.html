@@ -1,0 +1,13 @@
+<span class="toolbar-notif-host">
+  <ion-button
+    fill="clear"
+    routerLink="/folder/notifications"
+    [attr.aria-label]="ariaLabel"
+    class="toolbar-notif-btn"
+  >
+    <ion-icon name="notifications-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+  </ion-button>
+  @if (unreadCount > 0) {
+    <ion-badge color="primary" class="toolbar-notif-badge">{{ badgeLabel }}</ion-badge>
+  }
+</span>

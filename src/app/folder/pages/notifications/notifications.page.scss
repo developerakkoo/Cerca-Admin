@@ -1,0 +1,19 @@
+.notifications-content {
+  --background: var(--ion-color-light, #f4f5f8);
+}
+
+.unread {
+  --background: rgba(var(--ion-color-primary-rgb, 56, 128, 255), 0.08);
+}
+
+.notification-meta {
+  font-size: 0.75rem;
+  color: var(--ion-color-medium, #92949c);
+  margin-top: 4px;
+}
+
+.empty-hint {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--ion-color-medium);
+}

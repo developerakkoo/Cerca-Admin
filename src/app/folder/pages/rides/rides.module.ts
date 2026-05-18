@@ -8,6 +8,7 @@ import { RidesPageRoutingModule } from './rides-routing.module';
 
 import { RidesPage } from './rides.page';
 import { RideDetailPage } from './ride-detail/ride-detail.page';
+import { AdminNotificationsToolbarButtonComponent } from '../../../components/admin-notifications-toolbar-button/admin-notifications-toolbar-button.component';
 
 @NgModule({
   imports: [
@@ -15,7 +16,8 @@ import { RideDetailPage } from './ride-detail/ride-detail.page';
     FormsModule,
     ReactiveFormsModule,
     IonicModule,
-    RidesPageRoutingModule
+    RidesPageRoutingModule,
+    AdminNotificationsToolbarButtonComponent,
   ],
   declarations: [RidesPage, RideDetailPage]
 })

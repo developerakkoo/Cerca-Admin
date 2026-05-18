@@ -290,6 +290,87 @@
   margin-bottom: 0.65rem;
 }
 
+.driver-tile-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+
+  ion-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.35rem 0.5rem;
+    vertical-align: middle;
+  }
+}
+
+.driver-tile-rating {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  color: var(--ion-color-medium-shade);
+
+  strong {
+    color: var(--ion-color-dark);
+  }
+}
+
+.driver-tile-rating-meta {
+  color: var(--ion-color-medium);
+  font-weight: 400;
+}
+
+.driver-tile-vehicle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  color: var(--ion-color-dark);
+  line-height: 1.35;
+
+  ion-icon {
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+    font-size: 1rem;
+    color: var(--ion-color-primary);
+  }
+}
+
+.driver-tile-missing {
+  margin-bottom: 0.5rem;
+}
+
+.driver-tile-missing-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ion-color-medium);
+  margin-bottom: 0.35rem;
+}
+
+.driver-tile-missing-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+
+  ion-badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+  }
+}
+
+.driver-tile-pending-vehicle {
+  margin-bottom: 0.5rem;
+
+  ion-chip {
+    height: auto;
+    min-height: 28px;
+  }
+}
+
 .driver-tile-earnings {
   margin: 0 0 0.85rem;
   font-size: 0.85rem;

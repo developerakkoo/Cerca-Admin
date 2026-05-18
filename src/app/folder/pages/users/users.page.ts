@@ -8,6 +8,8 @@ import {
   getDisplayRange as formatAdminListRange,
   ADMIN_LIST_LIMIT_OPTIONS,
 } from '../../../shared/utils/admin-pagination';
+import { EMAIL_MAX_LENGTH, isValidEmail, normalizeEmail } from '../../../shared/validators/email.validators';
+import { isDigitsOnlyPhone, normalizePhoneDigits } from '../../../shared/validators/phone.validators';
 
 @Component({
   selector: 'app-users',
@@ -359,11 +361,20 @@ export class UsersPage implements OnInit, OnDestroy, ViewWillEnter {
     }
 
     // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(this.editFormData.email)) {
+    this.editFormData.email = normalizeEmail(this.editFormData.email);
+    if (!isValidEmail(this.editFormData.email)) {
       this.showToast('Please enter a valid email address', 'warning');
       return;
     }
+    if (this.editFormData.email.length > EMAIL_MAX_LENGTH) {
+      this.showToast(`Email must be at most ${EMAIL_MAX_LENGTH} characters`, 'warning');
+      return;
+    }
+    if (this.editFormData.phoneNumber && !isDigitsOnlyPhone(this.editFormData.phoneNumber)) {
+      this.showToast('Phone number must contain digits only', 'warning');
+      return;
+    }
+    this.editFormData.phoneNumber = normalizePhoneDigits(this.editFormData.phoneNumber);
 
     this.isLoading = true;
     this.adminApi.updateUser(this.editingUser._id, this.editFormData, this.selectedFile || undefined).subscribe({

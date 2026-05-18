@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, IonicModule, ToastController } from '@ionic/angular';
 import { AdminApiService } from '../../../../services/admin-api.service';
 import { environment } from '../../../../../environments/environment';
+import { AdminNotificationsToolbarButtonComponent } from '../../../../components/admin-notifications-toolbar-button/admin-notifications-toolbar-button.component';
 
 /** Inline template avoids NG2008 when external .html is missing on disk (sync/IDE issues). */
 const DRIVER_VEHICLE_DETAIL_TEMPLATE = `
@@ -14,6 +15,9 @@ const DRIVER_VEHICLE_DETAIL_TEMPLATE = `
       <ion-back-button defaultHref="/folder/vehicles"></ion-back-button>
     </ion-buttons>
     <ion-title>Driver vehicle</ion-title>
+    <ion-buttons slot="end">
+      <app-admin-notifications-toolbar-button />
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -161,7 +165,7 @@ const DRIVER_VEHICLE_DETAIL_TEMPLATE = `
 @Component({
   selector: 'app-driver-vehicle-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule],
+  imports: [CommonModule, FormsModule, IonicModule, AdminNotificationsToolbarButtonComponent],
   template: DRIVER_VEHICLE_DETAIL_TEMPLATE,
   styleUrls: ['./driver-vehicle-detail.page.scss'],
 })
@@ -174,7 +178,7 @@ export class DriverVehicleDetailPage implements OnInit {
 
   vehicleRejectModalOpen = false;
   vehicleRejectReason = '';
-  vehicleRejectAllowResubmit = false;
+  vehicleRejectAllowResubmit = true;
 
   constructor(
     private route: ActivatedRoute,
@@ -298,7 +302,7 @@ export class DriverVehicleDetailPage implements OnInit {
 
   openVehicleRejectModal(): void {
     this.vehicleRejectReason = '';
-    this.vehicleRejectAllowResubmit = false;
+    this.vehicleRejectAllowResubmit = true;
     this.vehicleRejectModalOpen = true;
   }
 

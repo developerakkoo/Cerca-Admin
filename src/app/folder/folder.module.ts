@@ -8,6 +8,7 @@ import { IonicModule } from '@ionic/angular';
 import { FolderPageRoutingModule } from './folder-routing.module';
 
 import { FolderPage } from './folder.page';
+import { AdminNotificationsToolbarButtonComponent } from '../components/admin-notifications-toolbar-button/admin-notifications-toolbar-button.component';
 
 @NgModule({
   imports: [
@@ -15,7 +16,8 @@ import { FolderPage } from './folder.page';
     FormsModule,
     HttpClientModule,
     IonicModule,
-    FolderPageRoutingModule
+    FolderPageRoutingModule,
+    AdminNotificationsToolbarButtonComponent,
   ],
   declarations: [FolderPage]
 })
