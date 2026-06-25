@@ -28,6 +28,7 @@ export class AppComponent implements OnInit, OnDestroy {
     { title: 'Vendors', url: '/folder/vendors', icon: 'business' },
     { title: 'Rides', url: '/folder/rides', icon: 'car-sport' },
     { title: 'Driver Earnings', url: '/folder/driver-earnings', icon: 'cash' },
+    { title: 'Driver Distance', url: '/folder/driver-distance', icon: 'navigate' },
     { title: 'Payouts', url: '/folder/payouts', icon: 'wallet' },
     { title: 'Promo Codes', url: '/folder/promo-codes', icon: 'gift' },
     { title: 'Support Chat', url: '/folder/support', icon: 'chatbubbles' },

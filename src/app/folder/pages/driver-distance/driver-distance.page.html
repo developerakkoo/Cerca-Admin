@@ -1,0 +1,154 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Driver Distance</ion-title>
+    <ion-buttons slot="end">
+      <app-admin-notifications-toolbar-button />
+      <ion-button fill="outline" (click)="exportCsv()" [disabled]="!rows.length">Export CSV</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense" class="ion-no-border">
+    <ion-toolbar>
+      <ion-title size="large">Driver Distance</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <div class="distance-container">
+    <ion-card class="filter-card">
+      <ion-card-content>
+        <div class="filter-row filter-row-driver">
+          <div class="driver-filter-wrap">
+            <ion-label class="filter-stacked-label">Driver</ion-label>
+            <div class="driver-filter-actions">
+              <ion-button size="small" fill="outline" (click)="openDriverFilterPicker()">Search driver</ion-button>
+              <ion-chip *ngIf="driverId" color="primary">
+                <ion-label>{{ driverFilterLabel }}</ion-label>
+                <ion-icon name="close-circle" (click)="clearDriverFilter()"></ion-icon>
+              </ion-chip>
+            </div>
+          </div>
+          <ion-select
+            label="Group by"
+            labelPlacement="stacked"
+            [(ngModel)]="groupBy"
+            (ionChange)="onFilterChange()">
+            <ion-select-option value="day">Day</ion-select-option>
+            <ion-select-option value="week">Week</ion-select-option>
+          </ion-select>
+        </div>
+        <div class="filter-row">
+          <ion-input
+            type="date"
+            label="Start Date"
+            labelPlacement="stacked"
+            [(ngModel)]="startDate"
+            (ionChange)="onFilterChange()">
+          </ion-input>
+          <ion-input
+            type="date"
+            label="End Date"
+            labelPlacement="stacked"
+            [(ngModel)]="endDate"
+            (ionChange)="onFilterChange()">
+          </ion-input>
+          <ion-button fill="clear" (click)="resetFilters()">Reset</ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="summary" class="summary-card">
+      <ion-card-header>
+        <ion-card-title>Summary</ion-card-title>
+        <ion-card-subtitle *ngIf="timezone">Timezone: {{ timezone }}</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <p>Total km</p>
+            <h3>{{ summary.totalKm | number:'1.2-2' }} km</h3>
+          </div>
+          <div class="summary-item">
+            <p>Rides counted</p>
+            <h3>{{ summary.rideCount || 0 }}</h3>
+          </div>
+          <div class="summary-item">
+            <p>Avg km / ride</p>
+            <h3>{{ summary.avgKmPerRide | number:'1.2-2' }} km</h3>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <div *ngIf="isLoading" class="loading-container">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Loading distance report...</p>
+    </div>
+
+    <ion-card *ngIf="error && !isLoading" color="danger">
+      <ion-card-content>
+        <p>{{ error }}</p>
+        <ion-button fill="outline" (click)="loadReport()">Retry</ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="!isLoading && !error" class="table-card">
+      <ion-card-content>
+        <div class="table-wrapper" *ngIf="rows.length > 0">
+          <table class="distance-table">
+            <thead>
+              <tr>
+                <th>Driver</th>
+                <th>Period</th>
+                <th>Rides</th>
+                <th>Total km</th>
+                <th>Avg km</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of rows">
+                <td>{{ row.driverName || '—' }}</td>
+                <td>{{ row.period }}</td>
+                <td>{{ row.rideCount }}</td>
+                <td>{{ row.totalKm | number:'1.2-2' }}</td>
+                <td>{{ row.avgKmPerRide | number:'1.2-2' }}</td>
+                <td>
+                  <ion-button
+                    *ngIf="row.rides?.length"
+                    fill="clear"
+                    size="small"
+                    (click)="toggleRow(row)">
+                    {{ expandedKey(row) === expandedRowKey ? 'Hide' : 'Rides' }}
+                  </ion-button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div *ngFor="let row of rows">
+            <div
+              class="ride-drilldown"
+              *ngIf="expandedKey(row) === expandedRowKey && row.rides?.length">
+              <p *ngFor="let ride of row.rides" class="ride-drilldown-item">
+                <a [routerLink]="['/folder/rides', ride.rideId]">
+                  Ride {{ ride.rideId }} · {{ ride.driverTravelledKm | number:'1.2-2' }} km
+                  <span *ngIf="ride.actualEndTime"> · {{ ride.actualEndTime | date:'short' }}</span>
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="rows.length === 0" class="empty-state">
+          <ion-icon name="map-outline" class="empty-icon"></ion-icon>
+          <p>No completed rides with distance in this range.</p>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

@@ -57,7 +57,10 @@ export class SettingsPage implements OnInit {
               data.pricingConfigurations
             ),
             services: data.services || [],
-            vehicleServices: data.vehicleServices || this.getDefaultVehicleServices(),
+            vehicleServices: this.mergeVehicleServices(
+              data.vehicleServices,
+              data.pricingConfigurations?.perKmRate
+            ),
             rideMatching: this.mergeRideMatching(data.rideMatching)
           };
         }
@@ -147,16 +150,9 @@ export class SettingsPage implements OnInit {
   }
 
   getDefaultFarePricing(perKmRate = 12) {
-    const rate = Number(perKmRate) || 12;
     return {
       enabled: false,
       timezone: 'Asia/Kolkata',
-      distanceTiers: {
-        tier1: { maxKm: 10, ratePerKm: rate },
-        tier2: { maxKm: 20, ratePerKm: rate },
-        tier3: { maxKm: 30, ratePerKm: rate },
-        beyondTier3RatePerKm: rate,
-      },
       timeBands: [
         { id: 'morning', label: 'Morning peak', start: '06:00', end: '10:00', multiplier: 1.2 },
         { id: 'day', label: 'Day', start: '10:00', end: '17:00', multiplier: 1.0 },
@@ -164,6 +160,18 @@ export class SettingsPage implements OnInit {
         { id: 'night', label: 'Night', start: '22:00', end: '06:00', multiplier: 1.8 },
       ],
       timeMultiplierAppliesTo: 'distanceAndTime',
+    };
+  }
+
+  getDefaultVehicleDistanceTiers(serviceKey: 'cercaZip' | 'cercaGlide' | 'cercaTitan', perKmRate = 12) {
+    const cityRate = Number(perKmRate) || 12;
+    const vehicleRate =
+      serviceKey === 'cercaZip' ? 10 : serviceKey === 'cercaGlide' ? 12 : 16;
+    const rate = vehicleRate || cityRate;
+    return {
+      tier1: { maxKm: 5, ratePerKm: rate },
+      tier2: { maxKm: 10, ratePerKm: rate },
+      beyondTier2RatePerKm: rate,
     };
   }
 
@@ -181,22 +189,6 @@ export class SettingsPage implements OnInit {
       ? {
           ...this.getDefaultFarePricing(perKm),
           ...base.farePricing,
-          distanceTiers: {
-            ...this.getDefaultFarePricing(perKm).distanceTiers,
-            ...(base.farePricing.distanceTiers || {}),
-            tier1: {
-              ...this.getDefaultFarePricing(perKm).distanceTiers.tier1,
-              ...(base.farePricing.distanceTiers?.tier1 || {}),
-            },
-            tier2: {
-              ...this.getDefaultFarePricing(perKm).distanceTiers.tier2,
-              ...(base.farePricing.distanceTiers?.tier2 || {}),
-            },
-            tier3: {
-              ...this.getDefaultFarePricing(perKm).distanceTiers.tier3,
-              ...(base.farePricing.distanceTiers?.tier3 || {}),
-            },
-          },
           timeBands:
             Array.isArray(base.farePricing.timeBands) &&
             base.farePricing.timeBands.length
@@ -230,8 +222,9 @@ export class SettingsPage implements OnInit {
     };
   }
 
-  getDefaultVehicleServices() {
-    return {
+  getDefaultVehicleServices(perKmRate = 12) {
+    const keys = ['cercaZip', 'cercaGlide', 'cercaTitan'] as const;
+    const base = {
       cercaZip: {
         name: 'Cerca Zip',
         price: 299,
@@ -257,6 +250,45 @@ export class SettingsPage implements OnInit {
         imagePath: 'assets/cars/cerca-large.png'
       }
     };
+    const out: any = { ...base };
+    keys.forEach((key) => {
+      out[key] = {
+        ...out[key],
+        distanceTiers: this.getDefaultVehicleDistanceTiers(key, perKmRate),
+      };
+    });
+    return out;
+  }
+
+  mergeVehicleServices(vehicleServices: any, perKmRate = 12) {
+    const defaults = this.getDefaultVehicleServices(perKmRate);
+    if (!vehicleServices) return defaults;
+    const keys = ['cercaZip', 'cercaGlide', 'cercaTitan'] as const;
+    const out: any = { ...defaults };
+    keys.forEach((key) => {
+      const incoming = vehicleServices[key];
+      if (!incoming) return;
+      out[key] = {
+        ...defaults[key],
+        ...incoming,
+        distanceTiers: {
+          ...defaults[key].distanceTiers,
+          ...(incoming.distanceTiers || {}),
+          tier1: {
+            ...defaults[key].distanceTiers.tier1,
+            ...(incoming.distanceTiers?.tier1 || {}),
+          },
+          tier2: {
+            ...defaults[key].distanceTiers.tier2,
+            ...(incoming.distanceTiers?.tier2 || {}),
+          },
+          beyondTier2RatePerKm:
+            incoming.distanceTiers?.beyondTier2RatePerKm ??
+            defaults[key].distanceTiers.beyondTier2RatePerKm,
+        },
+      };
+    });
+    return out;
   }
 
   validateVehicleServices(): string | null {
@@ -326,6 +358,9 @@ export class SettingsPage implements OnInit {
       }
       if (!this.settings.vehicleServices[serviceType].imagePath) {
         this.settings.vehicleServices[serviceType].imagePath = defaults[serviceType].imagePath;
+      }
+      if (!this.settings.vehicleServices[serviceType].distanceTiers) {
+        this.settings.vehicleServices[serviceType].distanceTiers = defaults[serviceType].distanceTiers;
       }
     }
   }

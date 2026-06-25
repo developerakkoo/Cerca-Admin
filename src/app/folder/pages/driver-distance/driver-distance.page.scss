@@ -1,0 +1,96 @@
+.distance-container {
+  padding: 16px;
+}
+
+.filter-card,
+.summary-card,
+.table-card {
+  margin-bottom: 16px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-row-driver {
+  align-items: flex-start;
+}
+
+.driver-filter-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.driver-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.filter-stacked-label {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.summary-item h3 {
+  margin: 4px 0 0;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.distance-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.distance-table th,
+.distance-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--ion-color-light-shade);
+}
+
+.distance-table th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.loading-container,
+.empty-state {
+  text-align: center;
+  padding: 24px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: var(--ion-color-medium);
+}
+
+.ride-drilldown {
+  margin-top: 8px;
+  padding-left: 12px;
+  border-left: 2px solid var(--ion-color-light-shade);
+}
+
+.ride-drilldown-item {
+  font-size: 13px;
+  margin: 4px 0;
+}
+
+.ride-drilldown-item a {
+  color: var(--ion-color-primary);
+  text-decoration: none;
+}

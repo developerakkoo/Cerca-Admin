@@ -43,6 +43,19 @@
             <span class="kpi-value">{{ inr(driver.earningsSummary.totalDriverEarnings) }}</span>
             <span class="kpi-label">Driver earnings (ledger)</span>
           </div>
+          <div class="kpi-chip" *ngIf="distanceSummary">
+            <span class="kpi-value">{{ distanceSummary.today?.totalKm | number:'1.1-1' }} km</span>
+            <span class="kpi-label">Today km</span>
+          </div>
+          <div class="kpi-chip" *ngIf="distanceSummary">
+            <span class="kpi-value">{{ distanceSummary.thisWeek?.totalKm | number:'1.1-1' }} km</span>
+            <span class="kpi-label">This week km</span>
+          </div>
+        </div>
+        <div class="hero-actions" *ngIf="driverId">
+          <ion-button fill="outline" size="small" [routerLink]="['/folder/driver-distance']" [queryParams]="{ driverId: driverId }">
+            View distance report
+          </ion-button>
         </div>
       </div>
       <div class="status-chips">

@@ -106,6 +106,12 @@
                     <ion-icon [name]="getSortIcon('fare')" [class.active]="sortBy === 'fare'"></ion-icon>
                   </div>
                 </th>
+                <th class="sortable" (click)="onSort('driverTravelledKm')">
+                  <div class="th-content">
+                    <span>Travelled km</span>
+                    <ion-icon [name]="getSortIcon('driverTravelledKm')" [class.active]="sortBy === 'driverTravelledKm'"></ion-icon>
+                  </div>
+                </th>
                 <th class="sortable" (click)="onSort('createdAt')">
                   <div class="th-content">
                     <span>Created</span>
@@ -133,6 +139,10 @@
                 <td>
                   <span *ngIf="ride.fare != null">{{ ride.fare | currency:'INR':'symbol':'1.2-2' }}</span>
                   <span *ngIf="ride.fare == null" class="cell-muted">—</span>
+                </td>
+                <td>
+                  <span *ngIf="ride.driverTravelledKm != null">{{ ride.driverTravelledKm | number:'1.2-2' }} km</span>
+                  <span *ngIf="ride.driverTravelledKm == null" class="cell-muted">—</span>
                 </td>
                 <td>{{ ride.createdAt | date:'medium' }}</td>
                 <td>{{ ride.updatedAt | date:'medium' }}</td>

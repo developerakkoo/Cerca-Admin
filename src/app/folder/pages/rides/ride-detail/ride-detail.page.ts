@@ -30,7 +30,9 @@ export class RideDetailPage implements OnInit, OnDestroy {
   private map: any = null;
   private pickupMarker: any = null;
   private dropoffMarker: any = null;
+  private acceptMarker: any = null;
   private driverMarker: any = null;
+  private routePolyline: any = null;
   private subs: Subscription[] = [];
 
   private readonly ACTIVE_STATUSES = ['requested', 'accepted', 'arrived', 'in_progress'];
@@ -298,6 +300,8 @@ export class RideDetailPage implements OnInit, OnDestroy {
 
         if (this.driverLocation) this.updateDriverMarker();
 
+        this.drawAcceptMarkerAndPolyline(google);
+
         // Resize map after container is laid out (fixes blank map in dynamic content)
         setTimeout(() => {
           if (this.map) google.maps.event.trigger(this.map, 'resize');
@@ -333,8 +337,87 @@ export class RideDetailPage implements OnInit, OnDestroy {
   private destroyMap() {
     this.pickupMarker = null;
     this.dropoffMarker = null;
+    this.acceptMarker = null;
     this.driverMarker = null;
+    this.routePolyline = null;
     this.map = null;
+  }
+
+  getAcceptCoords(): { lat: number; lng: number } | null {
+    const c = this.ride?.driverAcceptLocation?.coordinates;
+    if (!c || c.length < 2) return null;
+    return { lng: c[0], lat: c[1] };
+  }
+
+  hasDriverDistanceData(): boolean {
+    return (
+      this.ride?.driverTravelledKm != null ||
+      this.ride?.driverAcceptLocation != null ||
+      (this.ride?.routePointCount != null && this.ride.routePointCount > 0)
+    );
+  }
+
+  distanceSourceLabel(): string {
+    const source = this.ride?.driverDistanceBreakdown?.source;
+    if (source === 'estimated') return 'Estimated (A→B→C)';
+    if (source === 'polyline') return 'GPS polyline';
+    return '—';
+  }
+
+  distanceSourceBadgeColor(): string {
+    const source = this.ride?.driverDistanceBreakdown?.source;
+    if (source === 'polyline') return 'success';
+    if (source === 'estimated') return 'warning';
+    return 'medium';
+  }
+
+  private drawAcceptMarkerAndPolyline(google: any) {
+    if (!this.map) return;
+
+    const accept = this.getAcceptCoords();
+    if (accept) {
+      this.acceptMarker = new google.maps.Marker({
+        position: accept,
+        map: this.map,
+        title: 'Accept (A)',
+        label: { text: 'A', color: 'white', fontWeight: 'bold' },
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 10,
+          fillColor: '#8B5CF6',
+          fillOpacity: 1,
+          strokeColor: 'white',
+          strokeWeight: 2,
+        },
+      });
+    }
+
+    const preview = this.ride?.routePointsPreview;
+    if (Array.isArray(preview) && preview.length >= 2) {
+      const path = preview
+        .filter((p: any) => p?.coordinates?.length >= 2)
+        .map((p: any) => ({ lat: p.coordinates[1], lng: p.coordinates[0] }));
+      if (path.length >= 2) {
+        this.routePolyline = new google.maps.Polyline({
+          path,
+          geodesic: true,
+          strokeColor: '#3B82F6',
+          strokeOpacity: 0.85,
+          strokeWeight: 4,
+          map: this.map,
+        });
+      }
+    }
+
+    const bounds = new google.maps.LatLngBounds();
+    const pickup = this.getPickupCoords();
+    const dropoff = this.getDropoffCoords();
+    if (pickup) bounds.extend(pickup);
+    if (dropoff) bounds.extend(dropoff);
+    if (accept) bounds.extend(accept);
+    if (!bounds.isEmpty()) {
+      this.map.fitBounds(bounds);
+    }
   }
 
   getPickupCoords(): { lat: number; lng: number } | null {

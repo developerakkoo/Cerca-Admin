@@ -42,6 +42,10 @@ const routes: Routes = [
     loadChildren: () => import('./pages/driver-earnings/driver-earnings.module').then( m => m.DriverEarningsPageModule)
   },
   {
+    path: 'driver-distance',
+    loadChildren: () => import('./pages/driver-distance/driver-distance.module').then( m => m.DriverDistancePageModule)
+  },
+  {
     path: 'payouts',
     loadChildren: () => import('./pages/payouts/payouts.module').then( m => m.PayoutsPageModule)
   },

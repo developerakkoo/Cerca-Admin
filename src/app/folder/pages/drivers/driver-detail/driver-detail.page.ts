@@ -41,6 +41,7 @@ const COMPLIANCE_PLACEHOLDER_EXPIRY_ISO = '2099-12-31T12:00:00.000Z';
 export class DriverDetailPage implements OnInit, OnDestroy {
   driverId = '';
   driver: any = null;
+  distanceSummary: any = null;
   documents: DriverIdentityDocumentRow[] = [];
   rides: any[] = [];
   payouts: any[] = [];
@@ -299,6 +300,7 @@ export class DriverDetailPage implements OnInit, OnDestroy {
         this.payouts = data?.payouts || [];
         this.patchComplianceFromDriver();
         this.loadDocuments();
+        this.loadDistanceSummary();
         this.isLoading = false;
         setTimeout(() => this.initGoToMap(), 150);
       },
@@ -306,6 +308,18 @@ export class DriverDetailPage implements OnInit, OnDestroy {
         this.isLoading = false;
         this.error = err?.error?.message || 'Failed to load driver details';
       }
+    });
+  }
+
+  loadDistanceSummary() {
+    if (!this.driverId) return;
+    this.adminApi.getDriverDistanceSummary({ driverId: this.driverId }).subscribe({
+      next: (res) => {
+        this.distanceSummary = res?.data || null;
+      },
+      error: () => {
+        this.distanceSummary = null;
+      },
     });
   }
 

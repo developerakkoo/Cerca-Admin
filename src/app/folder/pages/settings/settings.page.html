@@ -83,48 +83,24 @@
         <ion-input type="number" [(ngModel)]="settings.pricingConfigurations.cancellationFees"></ion-input>
         <ion-note slot="helper">Used for rider cancellation fees and the rider penalty when the driver cancels during an active trip.</ion-note>
       </ion-item>
-      <ion-item>
+      <!-- <ion-item>
         <ion-label position="stacked">Platform Fees (%)</ion-label>
         <ion-input type="number" [(ngModel)]="settings.pricingConfigurations.platformFees"></ion-input>
       </ion-item>
       <ion-item>
         <ion-label position="stacked">Driver Commissions (%)</ion-label>
         <ion-input type="number" [(ngModel)]="settings.pricingConfigurations.driverCommissions"></ion-input>
-      </ion-item>
+      </ion-item> -->
       <ion-item>
         <ion-label>
           <h2>Advanced tiered pricing</h2>
-          <p>Distance slabs (0–10, 11–20, 21–30, 31+ km) and time-of-day multipliers</p>
+          <p>Per-vehicle distance slabs (0–5, 5–10, 10+ km) and time-of-day multipliers</p>
         </ion-label>
         <ion-toggle [(ngModel)]="settings.pricingConfigurations.farePricing.enabled"></ion-toggle>
       </ion-item>
       <ion-note class="ion-padding-horizontal">
         When disabled, the flat Per Km Rate above is used for all distances. City INSTANT rides use vehicle tier base prices, not Base Fare.
       </ion-note>
-    </ion-card-content>
-  </ion-card>
-
-  <ion-card *ngIf="settings?.pricingConfigurations?.farePricing">
-    <ion-card-header>
-      <ion-card-title>Distance tiers (₹/km)</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <ion-item>
-        <ion-label position="stacked">Tier 1 — 0 to 10 km</ion-label>
-        <ion-input type="number" [(ngModel)]="settings.pricingConfigurations.farePricing.distanceTiers.tier1.ratePerKm"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-label position="stacked">Tier 2 — 11 to 20 km</ion-label>
-        <ion-input type="number" [(ngModel)]="settings.pricingConfigurations.farePricing.distanceTiers.tier2.ratePerKm"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-label position="stacked">Tier 3 — 21 to 30 km</ion-label>
-        <ion-input type="number" [(ngModel)]="settings.pricingConfigurations.farePricing.distanceTiers.tier3.ratePerKm"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-label position="stacked">Beyond 30 km (same as tier 3 by default)</ion-label>
-        <ion-input type="number" [(ngModel)]="settings.pricingConfigurations.farePricing.distanceTiers.beyondTier3RatePerKm"></ion-input>
-      </ion-item>
     </ion-card-content>
   </ion-card>
 
@@ -240,6 +216,20 @@
             placeholder="2">
           </ion-input>
         </ion-item>
+        <ng-container *ngIf="settings.vehicleServices.cercaZip.enabled && settings.pricingConfigurations?.farePricing?.enabled">
+          <ion-item>
+            <ion-label position="stacked">0–5 km (₹/km)</ion-label>
+            <ion-input type="number" min="0" [(ngModel)]="settings.vehicleServices.cercaZip.distanceTiers.tier1.ratePerKm"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">5–10 km (₹/km)</ion-label>
+            <ion-input type="number" min="0" [(ngModel)]="settings.vehicleServices.cercaZip.distanceTiers.tier2.ratePerKm"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">After 10 km (₹/km)</ion-label>
+            <ion-input type="number" min="0" [(ngModel)]="settings.vehicleServices.cercaZip.distanceTiers.beyondTier2RatePerKm"></ion-input>
+          </ion-item>
+        </ng-container>
         <ion-item *ngIf="settings.vehicleServices.cercaZip.enabled">
           <ion-label position="stacked">Seats</ion-label>
           <ion-input 
@@ -298,6 +288,20 @@
             placeholder="3">
           </ion-input>
         </ion-item>
+        <ng-container *ngIf="settings.vehicleServices.cercaGlide.enabled && settings.pricingConfigurations?.farePricing?.enabled">
+          <ion-item>
+            <ion-label position="stacked">0–5 km (₹/km)</ion-label>
+            <ion-input type="number" min="0" [(ngModel)]="settings.vehicleServices.cercaGlide.distanceTiers.tier1.ratePerKm"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">5–10 km (₹/km)</ion-label>
+            <ion-input type="number" min="0" [(ngModel)]="settings.vehicleServices.cercaGlide.distanceTiers.tier2.ratePerKm"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">After 10 km (₹/km)</ion-label>
+            <ion-input type="number" min="0" [(ngModel)]="settings.vehicleServices.cercaGlide.distanceTiers.beyondTier2RatePerKm"></ion-input>
+          </ion-item>
+        </ng-container>
         <ion-item *ngIf="settings.vehicleServices.cercaGlide.enabled">
           <ion-label position="stacked">Seats</ion-label>
           <ion-input 
@@ -322,7 +326,7 @@
         <ion-item>
           <ion-label>
             <h2>Cerca Titan</h2>
-            <p>8 Seats</p>
+            <p>6 Seats</p>
           </ion-label>
           <ion-toggle 
             [(ngModel)]="settings.vehicleServices.cercaTitan.enabled"
@@ -356,6 +360,20 @@
             placeholder="4">
           </ion-input>
         </ion-item>
+        <ng-container *ngIf="settings.vehicleServices.cercaTitan.enabled && settings.pricingConfigurations?.farePricing?.enabled">
+          <ion-item>
+            <ion-label position="stacked">0–5 km (₹/km)</ion-label>
+            <ion-input type="number" min="0" [(ngModel)]="settings.vehicleServices.cercaTitan.distanceTiers.tier1.ratePerKm"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">5–10 km (₹/km)</ion-label>
+            <ion-input type="number" min="0" [(ngModel)]="settings.vehicleServices.cercaTitan.distanceTiers.tier2.ratePerKm"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">After 10 km (₹/km)</ion-label>
+            <ion-input type="number" min="0" [(ngModel)]="settings.vehicleServices.cercaTitan.distanceTiers.beyondTier2RatePerKm"></ion-input>
+          </ion-item>
+        </ng-container>
         <ion-item *ngIf="settings.vehicleServices.cercaTitan.enabled">
           <ion-label position="stacked">Seats</ion-label>
           <ion-input 

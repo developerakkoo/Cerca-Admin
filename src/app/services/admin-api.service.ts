@@ -209,6 +209,18 @@ export class AdminApiService {
     return this.http.get(`${this.baseUrl}/admin/drivers/earnings/analytics`, { params: this.buildParams(params) });
   }
 
+  getDriverDistanceSummary(params: Record<string, string>): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/drivers/distance/summary`, { params: this.buildParams(params) });
+  }
+
+  getDriverDistanceReport(params?: Record<string, string | number | boolean>): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/drivers/distance/report`, { params: this.buildParams(params) });
+  }
+
+  getDriverDistanceLeaderboard(params?: Record<string, string | number>): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/drivers/distance/leaderboard`, { params: this.buildParams(params) });
+  }
+
   /** Outstanding cash platform fees drivers owe admin */
   getCashReceivables(params?: Record<string, string | number>): Observable<any> {
     return this.http.get(`${this.baseUrl}/admin/drivers/cash-receivables`, { params: this.buildParams(params) });

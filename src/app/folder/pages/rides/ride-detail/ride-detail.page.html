@@ -42,7 +42,8 @@
           <strong>Destination changes:</strong> {{ ride.destinationRevision }} (revision counter)
         </p>
         <p *ngIf="ride.paymentStatus"><strong>Payment:</strong> {{ ride.paymentStatus }}</p>
-        <p *ngIf="ride.distanceInKm != null"><strong>Distance:</strong> {{ ride.distanceInKm }} km</p>
+        <p *ngIf="ride.distanceInKm != null"><strong>Trip distance (billing):</strong> {{ ride.distanceInKm }} km</p>
+        <p *ngIf="ride.driverTravelledKm != null"><strong>Driver travelled (A→C):</strong> {{ ride.driverTravelledKm | number:'1.2-2' }} km</p>
         <p *ngIf="ride.cancelledBy"><strong>Cancelled by:</strong> {{ ride.cancelledBy }}</p>
         <p *ngIf="ride.cancellationReason"><strong>Cancellation reason:</strong> {{ ride.cancellationReason }}</p>
       </ion-card-content>
@@ -66,7 +67,32 @@
       </ion-card-content>
     </ion-card>
 
-    <ion-card *ngIf="getPickupCoords() || getDropoffCoords()">
+    <ion-card *ngIf="hasDriverDistanceData()">
+      <ion-card-header>
+        <ion-card-title>Driver distance</ion-card-title>
+        <ion-card-subtitle>Accept → pickup → drop (GPS polyline where available)</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <p *ngIf="ride.driverTravelledKm != null">
+          <strong>A → C travelled:</strong> {{ ride.driverTravelledKm | number:'1.2-2' }} km
+        </p>
+        <p *ngIf="ride.driverDistanceBreakdown?.acceptToPickupKm != null">
+          <strong>A → B (accept → pickup):</strong> {{ ride.driverDistanceBreakdown.acceptToPickupKm | number:'1.2-2' }} km
+        </p>
+        <p *ngIf="ride.driverDistanceBreakdown?.pickupToDropKm != null">
+          <strong>B → C (pickup → drop):</strong> {{ ride.driverDistanceBreakdown.pickupToDropKm | number:'1.2-2' }} km
+        </p>
+        <p *ngIf="ride.routePointCount != null">
+          <strong>Route points:</strong> {{ ride.routePointCount }}
+        </p>
+        <ion-badge [color]="distanceSourceBadgeColor()">{{ distanceSourceLabel() }}</ion-badge>
+        <p *ngIf="ride.driverAcceptAt" class="ion-margin-top">
+          <strong>Accepted at:</strong> {{ ride.driverAcceptAt | date:'medium' }}
+        </p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="getPickupCoords() || getDropoffCoords() || getAcceptCoords()">
       <ion-card-header>
         <ion-card-title>Map</ion-card-title>
         <ion-card-subtitle *ngIf="driverLocation">Live driver tracking active</ion-card-subtitle>
